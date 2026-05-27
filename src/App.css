@@ -464,6 +464,40 @@
   margin: 0 0 8px;
 }
 
+/* ── Skeleton loading ───────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position:  600px 0; }
+}
+
+.skeletonTitle,
+.skeletonButton,
+.skeletonRow,
+.skeletonField {
+  border-radius: 6px;
+  background: linear-gradient(90deg, #e8ecf0 25%, #f4f6f8 50%, #e8ecf0 75%);
+  background-size: 600px 100%;
+  animation: shimmer 1.4s infinite linear;
+}
+
+.skeletonTitle  { height: 32px; width: 200px; }
+.skeletonButton { height: 34px; width: 100px; }
+
+.skeletonTable  { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+.skeletonRow    { height: 44px; width: 100%; }
+
+.skeletonForm   { display: flex; flex-direction: column; gap: 18px; padding: 8px 0; }
+.skeletonField  { height: 38px; width: 100%; }
+
+/* ── Error / Not-found page body ────────────────────────── */
+.errorPageBody {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  margin-top: 24px;
+}
+
 /* ── User label ─────────────────────────────────────────── */
 .userLabel {
   font-size: 14px;
