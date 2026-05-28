@@ -1,31 +1,31 @@
-'use client'
+'use client';
 
-import { useMemo, useState } from 'react'
-import { Resolver, useForm, useWatch } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useRouter } from 'next/navigation'
-import { useCreateProductMutation } from '@/src/store/productsApi.js'
-import { createDefaultProductFormValues, formValuesToApiPayload, productFormSchema } from '@/src/api/productFormModel.js'
-import ProductForm from '@/src/component/ProductForm'
-
+import { useMemo, useState } from 'react';
+import { Resolver, useForm, useWatch } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useRouter } from 'next/navigation';
+import { useCreateProductMutation } from '@/src/store/productsApi.js';
+import {
+  createDefaultProductFormValues,
+  formValuesToApiPayload,
+  productFormSchema,
+} from '@/src/api/productFormModel.js';
+import ProductForm from '@/src/component/ProductForm';
 
 interface ProductFormValues {
-  name: string
-  image: string
-  summary: string
-  price: number | string
-  color: string
+  name: string;
+  image: string;
+  summary: string;
+  price: number | string;
+  color: string;
 }
 
 export default function AddProductPage() {
-  const router = useRouter()
-  const [createProduct] = useCreateProductMutation()
-  const [submitError, setSubmitError] = useState<unknown>(null)
+  const router = useRouter();
+  const [createProduct] = useCreateProductMutation();
+  const [submitError, setSubmitError] = useState<unknown>(null);
 
-  const defaultValues = useMemo(
-    () => createDefaultProductFormValues() as ProductFormValues,
-    []
-  )
+  const defaultValues = useMemo(() => createDefaultProductFormValues() as ProductFormValues, []);
 
   const {
     register,
@@ -36,25 +36,25 @@ export default function AddProductPage() {
     resolver: zodResolver(productFormSchema) as Resolver<ProductFormValues>,
     defaultValues,
     mode: 'onSubmit',
-  })
+  });
 
   async function onSubmit(values: ProductFormValues) {
-    setSubmitError(null)
+    setSubmitError(null);
     try {
-      await createProduct(formValuesToApiPayload(values)).unwrap()
-      router.push('/')
+      await createProduct(formValuesToApiPayload(values)).unwrap();
+      router.push('/');
     } catch (err) {
-      setSubmitError(err)
+      setSubmitError(err);
     }
   }
 
   function goBack() {
-    router.back()
+    router.back();
   }
 
-  const previewUrl = useWatch({ control, name: 'image' })
-  const previewName = useWatch({ control, name: 'name' })
-  const previewAlt = previewName || 'Product image preview'
+  const previewUrl = useWatch({ control, name: 'image' });
+  const previewName = useWatch({ control, name: 'name' });
+  const previewAlt = previewName || 'Product image preview';
 
   return (
     <ProductForm
@@ -76,5 +76,5 @@ export default function AddProductPage() {
         </>
       }
     />
-  )
+  );
 }

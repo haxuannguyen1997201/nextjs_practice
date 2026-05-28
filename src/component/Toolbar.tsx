@@ -1,11 +1,11 @@
-'use client'
+'use client';
 
-import Link from 'next/link'
+import Link from 'next/link';
 
 interface ToolbarProps {
-  search: string
-  onSearchChange: (value: string) => void
-  onReset: () => void
+  search: string;
+  onSearchChange: (value: string) => void;
+  onReset: () => void;
 }
 
 export default function Toolbar({ search, onSearchChange, onReset }: ToolbarProps) {
@@ -28,5 +28,5 @@ export default function Toolbar({ search, onSearchChange, onReset }: ToolbarProp
         Add product
       </Link>
     </div>
-  )
+  );
 }

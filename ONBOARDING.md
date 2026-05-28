@@ -8,14 +8,14 @@
 
 Đây là một ứng dụng **quản lý sản phẩm cho một cửa hàng** (shop). Người dùng nội bộ (nhân viên) có thể:
 
-| Chức năng | Mô tả |
-|-----------|-------|
-| Đăng nhập | Xác thực bằng username + password |
+| Chức năng              | Mô tả                                        |
+| ---------------------- | -------------------------------------------- |
+| Đăng nhập              | Xác thực bằng username + password            |
 | Xem danh sách sản phẩm | Bảng sản phẩm, có tìm kiếm, lọc màu, sắp xếp |
-| Thêm sản phẩm | Form nhập thông tin sản phẩm mới |
-| Sửa sản phẩm | Click vào sản phẩm → chỉnh sửa thông tin |
-| Xóa sản phẩm | Xóa từ danh sách (có confirm) |
-| Đăng xuất | Xóa session, về lại trang login |
+| Thêm sản phẩm          | Form nhập thông tin sản phẩm mới             |
+| Sửa sản phẩm           | Click vào sản phẩm → chỉnh sửa thông tin     |
+| Xóa sản phẩm           | Xóa từ danh sách (có confirm)                |
+| Đăng xuất              | Xóa session, về lại trang login              |
 
 Toàn bộ dữ liệu sản phẩm được lấy từ một **API bên ngoài** (REST). Không có database riêng trong project này.
 
@@ -23,14 +23,14 @@ Toàn bộ dữ liệu sản phẩm được lấy từ một **API bên ngoài*
 
 ## 2. Công Nghệ Sử Dụng
 
-| Công nghệ | Vai trò |
-|-----------|---------|
-| **Next.js 16** (App Router) | Framework chính — routing, server/client components, server actions |
-| **React 19** | UI library |
-| **Redux Toolkit + RTK Query** | Quản lý state và gọi API CRUD sản phẩm |
-| **React Hook Form + Zod** | Form và validation |
-| **TypeScript** | Type safety |
-| **Tailwind CSS** | Styling |
+| Công nghệ                     | Vai trò                                                             |
+| ----------------------------- | ------------------------------------------------------------------- |
+| **Next.js 16** (App Router)   | Framework chính — routing, server/client components, server actions |
+| **React 19**                  | UI library                                                          |
+| **Redux Toolkit + RTK Query** | Quản lý state và gọi API CRUD sản phẩm                              |
+| **React Hook Form + Zod**     | Form và validation                                                  |
+| **TypeScript**                | Type safety                                                         |
+| **Tailwind CSS**              | Styling                                                             |
 
 ---
 
@@ -88,13 +88,13 @@ Render trước → gửi HTML         Tương tác với người dùng
 
 **Trong project hiện tại:**
 
-| File | Loại | Lý do |
-|------|------|-------|
-| `app/page.tsx` | **Client** | Dùng RTK Query hooks, useState, useRouter, xử lý delete/search/filter |
-| `app/login/page.tsx` | **Client** | Dùng useState, useRouter, gọi loginAction |
-| `app/add/page.tsx` | **Client** | Dùng react-hook-form, useRouter, RTK Query |
-| `app/detail/[productId]/page.tsx` | **Server** | Fetch product từ API server-side, truyền vào `ProductDetailScreen` |
-| `src/component/ProductDetailScreen.tsx` | **Client** | Dùng react-hook-form, RTK Query mutation |
+| File                                    | Loại       | Lý do                                                                 |
+| --------------------------------------- | ---------- | --------------------------------------------------------------------- |
+| `app/page.tsx`                          | **Client** | Dùng RTK Query hooks, useState, useRouter, xử lý delete/search/filter |
+| `app/login/page.tsx`                    | **Client** | Dùng useState, useRouter, gọi loginAction                             |
+| `app/add/page.tsx`                      | **Client** | Dùng react-hook-form, useRouter, RTK Query                            |
+| `app/detail/[productId]/page.tsx`       | **Server** | Fetch product từ API server-side, truyền vào `ProductDetailScreen`    |
+| `src/component/ProductDetailScreen.tsx` | **Client** | Dùng react-hook-form, RTK Query mutation                              |
 
 ### 4.2 Server Actions
 
@@ -112,12 +112,12 @@ logoutAction()                   →  Xóa cookie, user bị đẩy về login.
 
 Project dùng **cả hai** với mục đích khác nhau:
 
-| | `auth_token` (cookie) | `auth_user` (localStorage) |
-|--|--|--|
-| Lưu gì | `"1"` (đơn giản đánh dấu đã login) | Thông tin user (id, name, username) |
-| Ai đọc | Server (Next.js pages, server components) | Client (hiển thị tên user trong UI) |
-| Bảo mật | HttpOnly — JS không đọc được | Có thể đọc bằng JS |
-| Xóa khi | Logout / hết 24h | Logout |
+|         | `auth_token` (cookie)                     | `auth_user` (localStorage)          |
+| ------- | ----------------------------------------- | ----------------------------------- |
+| Lưu gì  | `"1"` (đơn giản đánh dấu đã login)        | Thông tin user (id, name, username) |
+| Ai đọc  | Server (Next.js pages, server components) | Client (hiển thị tên user trong UI) |
+| Bảo mật | HttpOnly — JS không đọc được              | Có thể đọc bằng JS                  |
+| Xóa khi | Logout / hết 24h                          | Logout                              |
 
 ---
 
@@ -146,6 +146,7 @@ router.push('/')   →  [app/page.tsx — Server]
 ```
 
 **Đăng xuất:**
+
 ```
 [ProductPageClient.tsx] handleLogout()
     │
@@ -228,15 +229,16 @@ Middleware áp dụng cho tất cả route, **ngoại trừ**: `_next/static`, `
 
 File `src/api/productFormModel.js` định nghĩa schema dùng chung cho cả Add và Edit:
 
-| Field | Rule |
-|-------|------|
-| `name` | Bắt buộc, không được trống |
-| `image` | Bắt buộc, phải là URL http/https hợp lệ |
-| `summary` | Bắt buộc, không được trống |
-| `price` | Bắt buộc, là số, phải ≥ 0 |
-| `color` | Bắt buộc, không được trống |
+| Field     | Rule                                    |
+| --------- | --------------------------------------- |
+| `name`    | Bắt buộc, không được trống              |
+| `image`   | Bắt buộc, phải là URL http/https hợp lệ |
+| `summary` | Bắt buộc, không được trống              |
+| `price`   | Bắt buộc, là số, phải ≥ 0               |
+| `color`   | Bắt buộc, không được trống              |
 
 File cũng chứa ba helper:
+
 - `createDefaultProductFormValues()` — giá trị mặc định khi mở form trống.
 - `apiProductToFormValues(apiProduct)` — chuyển tên field API (`productName`) sang tên field form (`name`).
 - `formValuesToApiPayload(values)` — chuyển ngược lại khi submit.

@@ -1,11 +1,11 @@
-import { z } from 'zod'
+import { z } from 'zod';
 
 function isValidHttpUrl(value) {
   try {
-    const url = new URL(value)
-    return url.protocol === 'http:' || url.protocol === 'https:'
+    const url = new URL(value);
+    return url.protocol === 'http:' || url.protocol === 'https:';
   } catch {
-    return false
+    return false;
   }
 }
 
@@ -19,13 +19,16 @@ export const productFormSchema = z.object({
   summary: z.string().trim().min(1, 'Summary is required'),
   price: z.preprocess(
     (value) => {
-      if (value === '' || value == null) return NaN
-      return typeof value === 'number' ? value : Number(value)
+      if (value === '' || value == null) return NaN;
+      return typeof value === 'number' ? value : Number(value);
     },
-    z.number({ invalid_type_error: 'Price is required' }).finite('Price is required').min(0, 'Price must be ≥ 0')
+    z
+      .number({ invalid_type_error: 'Price is required' })
+      .finite('Price is required')
+      .min(0, 'Price must be ≥ 0')
   ),
   color: z.string().trim().min(1, 'Color is required'),
-})
+});
 
 export function createDefaultProductFormValues() {
   return {
@@ -34,7 +37,7 @@ export function createDefaultProductFormValues() {
     summary: '',
     price: '',
     color: '',
-  }
+  };
 }
 
 export function apiProductToFormValues(apiProduct) {
@@ -44,7 +47,7 @@ export function apiProductToFormValues(apiProduct) {
     summary: apiProduct?.summary ?? '',
     price: apiProduct?.price ?? '',
     color: apiProduct?.color ?? '',
-  }
+  };
 }
 
 export function formValuesToApiPayload(values) {
@@ -54,5 +57,5 @@ export function formValuesToApiPayload(values) {
     summary: values.summary,
     price: values.price,
     color: values.color,
-  }
+  };
 }

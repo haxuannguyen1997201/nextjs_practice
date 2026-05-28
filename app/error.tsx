@@ -1,16 +1,16 @@
-'use client'
+'use client';
 
-import { useEffect } from 'react'
+import { useEffect } from 'react';
 
 interface ErrorPageProps {
-  error: Error & { digest?: string }
-  reset: () => void
+  error: Error & { digest?: string };
+  reset: () => void;
 }
 
 export default function Error({ error, reset }: ErrorPageProps) {
   useEffect(() => {
-    console.error('[ProductPage error]', error)
-  }, [error])
+    console.error('[ProductPage error]', error);
+  }, [error]);
 
   return (
     <div className="shopPage">
@@ -28,5 +28,5 @@ export default function Error({ error, reset }: ErrorPageProps) {
         </button>
       </div>
     </div>
-  )
+  );
 }

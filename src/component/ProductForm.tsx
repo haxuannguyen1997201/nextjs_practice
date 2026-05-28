@@ -1,35 +1,35 @@
-'use client'
+'use client';
 
-import { ReactNode, useMemo, useState } from 'react'
-import Image from 'next/image'
-import { UseFormRegister, FieldErrors } from 'react-hook-form'
-import FormField from './FormField'
-import FormActions from './FormActions'
+import { ReactNode, useState } from 'react';
+import Image from 'next/image';
+import { UseFormRegister, FieldErrors } from 'react-hook-form';
+import FormField from './FormField';
+import FormActions from './FormActions';
 
 interface ProductFormValues {
-  name: string
-  image: string
-  summary: string
-  price: number | string
-  color: string
+  name: string;
+  image: string;
+  summary: string;
+  price: number | string;
+  color: string;
 }
 
 interface ProductFormProps {
-  title: string
-  register: UseFormRegister<ProductFormValues>
-  errors: FieldErrors<ProductFormValues>
-  isSubmitting: boolean
-  onFormSubmit: React.FormEventHandler<HTMLFormElement>
-  onCancel: () => void
-  submitLabel?: string
-  submitDisabled?: boolean
-  isLoading?: boolean
-  loadError?: unknown
-  submitError?: unknown
-  submitErrorMessage?: string
-  imagePreviewUrl?: string
-  imagePreviewAlt?: string
-  tips?: ReactNode
+  title: string;
+  register: UseFormRegister<ProductFormValues>;
+  errors: FieldErrors<ProductFormValues>;
+  isSubmitting: boolean;
+  onFormSubmit: React.FormEventHandler<HTMLFormElement>;
+  onCancel: () => void;
+  submitLabel?: string;
+  submitDisabled?: boolean;
+  isLoading?: boolean;
+  loadError?: unknown;
+  submitError?: unknown;
+  submitErrorMessage?: string;
+  imagePreviewUrl?: string;
+  imagePreviewAlt?: string;
+  tips?: ReactNode;
 }
 
 export default function ProductForm({
@@ -49,11 +49,11 @@ export default function ProductForm({
   imagePreviewAlt = 'Product image preview',
   tips,
 }: ProductFormProps) {
-  const disabled = isLoading || isSubmitting
-  const [brokenPreviewUrl, setBrokenPreviewUrl] = useState('')
+  const disabled = isLoading || isSubmitting;
+  const [brokenPreviewUrl, setBrokenPreviewUrl] = useState('');
 
-  const previewUrl = useMemo(() => String(imagePreviewUrl ?? '').trim(), [imagePreviewUrl])
-  const isPreviewBroken = previewUrl.length > 0 && previewUrl === brokenPreviewUrl
+  const previewUrl = String(imagePreviewUrl ?? '').trim();
+  const isPreviewBroken = previewUrl.length > 0 && previewUrl === brokenPreviewUrl;
 
   return (
     <div className="shopPage">
@@ -108,7 +108,11 @@ export default function ProductForm({
                     />
                   </FormField>
 
-                  <FormField label="Image URL" error={errors.image?.message} className="formFieldWide">
+                  <FormField
+                    label="Image URL"
+                    error={errors.image?.message}
+                    className="formFieldWide"
+                  >
                     <input
                       className="formInput"
                       type="url"
@@ -135,7 +139,11 @@ export default function ProductForm({
                     )}
                   </FormField>
 
-                  <FormField label="Summary" error={errors.summary?.message} className="formFieldWide">
+                  <FormField
+                    label="Summary"
+                    error={errors.summary?.message}
+                    className="formFieldWide"
+                  >
                     <textarea
                       className="formTextarea"
                       rows={4}
@@ -170,5 +178,5 @@ export default function ProductForm({
         </aside>
       </div>
     </div>
-  )
+  );
 }

@@ -1,50 +1,50 @@
-'use client'
+'use client';
 
-import { useEffect, useMemo, useState } from 'react'
-import { Resolver, useForm, useWatch } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useRouter } from 'next/navigation'
-import { useUpdateProductMutation } from '../store/productsApi.js'
+import { useEffect, useMemo, useState } from 'react';
+import { Resolver, useForm, useWatch } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useRouter } from 'next/navigation';
+import { useUpdateProductMutation } from '../store/productsApi.js';
 import {
   apiProductToFormValues,
   createDefaultProductFormValues,
   formValuesToApiPayload,
   productFormSchema,
-} from '../api/productFormModel.js'
-import ProductForm from './ProductForm'
+} from '../api/productFormModel.js';
+import ProductForm from './ProductForm';
 
 interface ProductFormValues {
-  name: string
-  image: string
-  summary: string
-  price: number | string
-  color: string
+  name: string;
+  image: string;
+  summary: string;
+  price: number | string;
+  color: string;
 }
 
 interface ApiProduct {
-  id?: string | number
-  productName?: string
-  image?: string
-  summary?: string
-  price?: number | string
-  color?: string
-  createdAt?: string
+  id?: string | number;
+  productName?: string;
+  image?: string;
+  summary?: string;
+  price?: number | string;
+  color?: string;
+  createdAt?: string;
 }
 
 interface ProductDetailScreenProps {
-  productId: string
-  initialProduct: ApiProduct | null
+  productId: string;
+  initialProduct: ApiProduct | null;
 }
 
-export default function ProductDetailScreen({ productId, initialProduct }: ProductDetailScreenProps) {
-  const router = useRouter()
-  const [updateProduct] = useUpdateProductMutation()
-  const [submitError, setSubmitError] = useState<unknown>(null)
+export default function ProductDetailScreen({
+  productId,
+  initialProduct,
+}: ProductDetailScreenProps) {
+  const router = useRouter();
+  const [updateProduct] = useUpdateProductMutation();
+  const [submitError, setSubmitError] = useState<unknown>(null);
 
-  const defaultValues = useMemo(
-    () => createDefaultProductFormValues() as ProductFormValues,
-    []
-  )
+  const defaultValues = useMemo(() => createDefaultProductFormValues() as ProductFormValues, []);
 
   const {
     register,
@@ -56,31 +56,31 @@ export default function ProductDetailScreen({ productId, initialProduct }: Produ
     resolver: zodResolver(productFormSchema) as Resolver<ProductFormValues>,
     defaultValues,
     mode: 'onSubmit',
-  })
+  });
 
   useEffect(() => {
     if (initialProduct) {
-      reset(apiProductToFormValues(initialProduct) as ProductFormValues)
+      reset(apiProductToFormValues(initialProduct) as ProductFormValues);
     }
-  }, [initialProduct, reset])
+  }, [initialProduct, reset]);
 
   async function onSubmit(values: ProductFormValues) {
-    setSubmitError(null)
+    setSubmitError(null);
     try {
-      await updateProduct({ productId, payload: formValuesToApiPayload(values) }).unwrap()
-      router.push('/')
+      await updateProduct({ productId, payload: formValuesToApiPayload(values) }).unwrap();
+      router.push('/');
     } catch (err) {
-      setSubmitError(err)
+      setSubmitError(err);
     }
   }
 
   function goBack() {
-    router.back()
+    router.back();
   }
 
-  const previewUrl = useWatch({ control, name: 'image' })
-  const previewName = useWatch({ control, name: 'name' })
-  const previewAlt = previewName || 'Product image preview'
+  const previewUrl = useWatch({ control, name: 'image' });
+  const previewName = useWatch({ control, name: 'name' });
+  const previewAlt = previewName || 'Product image preview';
 
   return (
     <ProductForm
@@ -100,5 +100,5 @@ export default function ProductDetailScreen({ productId, initialProduct }: Produ
       imagePreviewAlt={previewAlt}
       tips={<p className="shopStatus">Edit and click &quot;Edit product&quot; to save.</p>}
     />
-  )
+  );
 }

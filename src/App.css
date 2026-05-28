@@ -466,8 +466,12 @@
 
 /* ── Skeleton loading ───────────────────────────────────── */
 @keyframes shimmer {
-  0%   { background-position: -600px 0; }
-  100% { background-position:  600px 0; }
+  0% {
+    background-position: -600px 0;
+  }
+  100% {
+    background-position: 600px 0;
+  }
 }
 
 .skeletonTitle,
@@ -480,14 +484,36 @@
   animation: shimmer 1.4s infinite linear;
 }
 
-.skeletonTitle  { height: 32px; width: 200px; }
-.skeletonButton { height: 34px; width: 100px; }
+.skeletonTitle {
+  height: 32px;
+  width: 200px;
+}
+.skeletonButton {
+  height: 34px;
+  width: 100px;
+}
 
-.skeletonTable  { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
-.skeletonRow    { height: 44px; width: 100%; }
+.skeletonTable {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+.skeletonRow {
+  height: 44px;
+  width: 100%;
+}
 
-.skeletonForm   { display: flex; flex-direction: column; gap: 18px; padding: 8px 0; }
-.skeletonField  { height: 38px; width: 100%; }
+.skeletonForm {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 8px 0;
+}
+.skeletonField {
+  height: 38px;
+  width: 100%;
+}
 
 /* ── Error / Not-found page body ────────────────────────── */
 .errorPageBody {
@@ -550,8 +576,9 @@
 
 .confirmToast {
   position: fixed;
-  right: 20px;
-  bottom: 20px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   width: min(420px, calc(100vw - 40px));
   background: #fff;
   border: 1px solid rgba(0, 0, 0, 0.15);
@@ -578,8 +605,9 @@
 
 .appToast {
   position: fixed;
-  left: 20px;
-  bottom: 20px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   min-width: 220px;
   max-width: min(420px, calc(100vw - 40px));
   border-radius: 10px;
@@ -602,8 +630,8 @@
 @media (max-width: 680px) {
   .confirmToast,
   .appToast {
-    right: 12px;
-    left: 12px;
+    left: 50%;
+    transform: translate(-50%, -50%);
     width: auto;
     max-width: none;
   }

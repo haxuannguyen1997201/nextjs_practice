@@ -1,12 +1,12 @@
-'use client'
+'use client';
 
-import { ReactNode } from 'react'
+import { ReactNode } from 'react';
 
 interface FormFieldProps {
-  label: string
-  error?: string
-  className?: string
-  children: ReactNode
+  label: string;
+  error?: string;
+  className?: string;
+  children: ReactNode;
 }
 
 export default function FormField({ label, error, className, children }: FormFieldProps) {
@@ -16,5 +16,5 @@ export default function FormField({ label, error, className, children }: FormFie
       {children}
       {error && <span className="formError">{error}</span>}
     </label>
-  )
+  );
 }

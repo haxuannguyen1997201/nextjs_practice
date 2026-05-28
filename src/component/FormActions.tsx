@@ -1,11 +1,11 @@
-'use client'
+'use client';
 
 interface FormActionsProps {
-  onCancel: () => void
-  isSubmitting: boolean
-  isLoading?: boolean
-  submitDisabled?: boolean
-  submitLabel?: string
+  onCancel: () => void;
+  isSubmitting: boolean;
+  isLoading?: boolean;
+  submitDisabled?: boolean;
+  submitLabel?: string;
 }
 
 export default function FormActions({
@@ -17,12 +17,7 @@ export default function FormActions({
 }: FormActionsProps) {
   return (
     <div className="formActions">
-      <button
-        type="button"
-        className="secondaryButton"
-        onClick={onCancel}
-        disabled={isSubmitting}
-      >
+      <button type="button" className="secondaryButton" onClick={onCancel} disabled={isSubmitting}>
         Cancel
       </button>
       <button
@@ -33,5 +28,5 @@ export default function FormActions({
         {isSubmitting ? 'Saving...' : submitLabel}
       </button>
     </div>
-  )
+  );
 }

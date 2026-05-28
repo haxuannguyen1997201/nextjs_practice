@@ -1,83 +1,66 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { loginAction } from '@/app/actions/auth'
-import FormField from '@/src/component/FormField'
+import { useActionState, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { loginAction, type LoginState } from '@/app/actions/auth';
+import FormField from '@/src/component/FormField';
+import SubmitButton from '@/src/component/SubmitButton';
+
 
 export default function LoginPage() {
-  const router = useRouter()
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter();
+  const [state, action] = useActionState<LoginState, FormData>(loginAction, null);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    setError(null)
-    setIsLoading(true)
-    try {
-      const result = await loginAction(username, password)
-      if (!result.success) {
-        if (result.code === 'USER_NOT_FOUND') {
-          setError('No user found.')
-        } else if (result.code === 'WRONG_PASSWORD') {
-          setError('Incorrect password.')
-        } else {
-          setError(result.message || 'Something went wrong. Please try again.')
-        }
-        return
-      }
-      localStorage.setItem('auth_user', JSON.stringify(result.user))
-      router.push('/')
-    } catch {
-      setError('Something went wrong. Please try again.')
-    } finally {
-      setIsLoading(false)
+  useEffect(() => {
+    if (state?.success) {
+      localStorage.setItem('auth_user', JSON.stringify(state.user));
+      const role = String((state.user as { role?: string })?.role ?? '').toLowerCase();
+      router.push(role === 'admin' ? '/users' : '/');
     }
-  }
+  }, [state, router]);
+
+  const errorMessage = state && !state.success ? state.message : null;
+  const fieldErrors = state && !state.success ? state.fieldErrors : null;
 
   return (
     <div className="loginPage">
       <div className="loginCard">
         <h1 className="shopTitle loginTitle">Sign in</h1>
 
-        <form className="productForm" onSubmit={handleSubmit} noValidate>
+        <form className="productForm" action={action} noValidate>
           <div className="formGrid">
-            <FormField label="Username">
+            <FormField label="Username" error={fieldErrors?.username?.[0]}>
               <input
                 className="formInput"
                 type="text"
+                name="username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="Enter your username"
-                disabled={isLoading}
                 required
               />
             </FormField>
 
-            <FormField label="Password">
+            <FormField label="Password" error={fieldErrors?.password?.[0]}>
               <input
                 className="formInput"
                 type="password"
+                name="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"
-                disabled={isLoading}
                 required
               />
             </FormField>
           </div>
 
-          {error && <p className="shopStatus shopStatusError">{error}</p>}
+          {errorMessage && <p className="shopStatus shopStatusError">{errorMessage}</p>}
 
-          <div className="formActions">
-            <button type="submit" className="primaryButton loginButton" disabled={isLoading}>
-              {isLoading ? 'Signing in...' : 'Sign in'}
-            </button>
-          </div>
+          <SubmitButton />
         </form>
       </div>
     </div>
-  ) 
+  );
 }

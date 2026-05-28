@@ -1,19 +1,23 @@
-'use client'
+'use client';
 
-import { memo } from 'react'
+import { memo } from 'react';
 
 interface ColorOption {
-  color: string
-  count: number
+  color: string;
+  count: number;
 }
 
 interface FilterViewProps {
-  colorOptions: ColorOption[]
-  selectedColors: Set<string>
-  onToggleColor: (color: string) => void
+  colorOptions: ColorOption[];
+  selectedColors: Set<string>;
+  onToggleColor: (color: string) => void;
 }
 
-export default memo(function FilterView({ colorOptions, selectedColors, onToggleColor }: FilterViewProps) {
+export default memo(function FilterView({
+  colorOptions,
+  selectedColors,
+  onToggleColor,
+}: FilterViewProps) {
   return (
     <aside className="shopSidebar" aria-label="Filters">
       <div className="filterCard">
@@ -33,5 +37,5 @@ export default memo(function FilterView({ colorOptions, selectedColors, onToggle
         </div>
       </div>
     </aside>
-  )
-})
+  );
+});

@@ -1,19 +1,19 @@
-'use client'
+'use client';
 
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface ErrorPageProps {
-  error: Error & { digest?: string }
-  reset: () => void
+  error: Error & { digest?: string };
+  reset: () => void;
 }
 
 export default function Error({ error, reset }: ErrorPageProps) {
   useEffect(() => {
-    console.error('[ProductDetailPage error]', error)
-  }, [error])
+    console.error('[ProductDetailPage error]', error);
+  }, [error]);
 
-  const router = useRouter()
+  const router = useRouter();
 
   return (
     <div className="shopPage">
@@ -36,5 +36,5 @@ export default function Error({ error, reset }: ErrorPageProps) {
         </button>
       </div>
     </div>
-  )
+  );
 }
