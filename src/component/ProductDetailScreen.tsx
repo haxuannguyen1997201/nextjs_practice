@@ -11,25 +11,8 @@ import {
   formValuesToApiPayload,
   productFormSchema,
 } from '../api/productFormModel.js';
+import type { ApiProduct, ProductFormValues } from '../models/product';
 import ProductForm from './ProductForm';
-
-interface ProductFormValues {
-  name: string;
-  image: string;
-  summary: string;
-  price: number | string;
-  color: string;
-}
-
-interface ApiProduct {
-  id?: string | number;
-  productName?: string;
-  image?: string;
-  summary?: string;
-  price?: number | string;
-  color?: string;
-  createdAt?: string;
-}
 
 interface ProductDetailScreenProps {
   productId: string;

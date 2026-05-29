@@ -8,7 +8,9 @@ export function proxy(request: NextRequest) {
   }
 
   const authToken = request.cookies.get('auth_token')?.value;
-  const authRole = String(request.cookies.get('auth_role')?.value ?? '').toLowerCase();
+  const authRole = String(request.cookies.get('auth_role')?.value ?? '')
+    .trim()
+    .toLowerCase();
 
   const isAuthenticated = Boolean(authToken);
 

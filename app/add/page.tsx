@@ -10,15 +10,8 @@ import {
   formValuesToApiPayload,
   productFormSchema,
 } from '@/src/api/productFormModel.js';
+import type { ProductFormValues } from '@/src/models/product';
 import ProductForm from '@/src/component/ProductForm';
-
-interface ProductFormValues {
-  name: string;
-  image: string;
-  summary: string;
-  price: number | string;
-  color: string;
-}
 
 export default function AddProductPage() {
   const router = useRouter();

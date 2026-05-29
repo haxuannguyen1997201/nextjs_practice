@@ -1,15 +1,6 @@
 import { notFound } from 'next/navigation';
 import UserDetailScreen from '@/src/component/UserDetailScreen';
-
-interface ApiUser {
-  id?: string | number;
-  avatar?: string;
-  name?: string;
-  username?: string;
-  password?: string;
-  role?: string;
-  createdAt?: string;
-}
+import type { ApiUser } from '@/src/models/user';
 
 async function getUser(userId: string): Promise<ApiUser | null> {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;

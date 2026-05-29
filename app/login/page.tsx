@@ -16,7 +16,9 @@ export default function LoginPage() {
   useEffect(() => {
     if (state?.success) {
       localStorage.setItem('auth_user', JSON.stringify(state.user));
-      const role = String((state.user as { role?: string })?.role ?? '').toLowerCase();
+      const role = String((state.user as { role?: string })?.role ?? '')
+        .trim()
+        .toLowerCase();
       router.push(role === 'admin' ? '/users' : '/');
     }
   }, [state, router]);

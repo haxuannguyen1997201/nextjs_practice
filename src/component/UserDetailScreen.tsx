@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
 import { useUpdateUserMutation } from '../store/productsApi.js';
+import type { ApiUser } from '../models/user';
 import FormField from './FormField';
 import FormActions from './FormActions';
 
@@ -15,16 +16,6 @@ interface UserFormValues {
   name: string;
   username: string;
   password: string;
-}
-
-interface ApiUser {
-  id?: string | number;
-  avatar?: string;
-  name?: string;
-  username?: string;
-  password?: string;
-  role?: string;
-  createdAt?: string;
 }
 
 const userFormSchema = z.object({

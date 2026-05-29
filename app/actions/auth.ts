@@ -91,7 +91,7 @@ export async function loginAction(prevState: LoginState, formData: FormData): Pr
   delete safeUser.password;
 
   const cookieStore = await cookies();
-  const role = String(safeUser.role ?? '').toLowerCase();
+  const role = String(safeUser.role ?? '').trim().toLowerCase();
   cookieStore.set('auth_token', '1', {
     httpOnly: true,
     sameSite: 'lax',

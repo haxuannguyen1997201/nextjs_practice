@@ -3,15 +3,7 @@
 import { memo } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-
-export interface StaffUserRow {
-  id?: string | number;
-  avatar?: string;
-  name?: string;
-  username?: string;
-  password?: string;
-  createdAt?: string;
-}
+import type { StaffUserRow } from '../models/user';
 
 interface UserTableProps {
   users: StaffUserRow[];

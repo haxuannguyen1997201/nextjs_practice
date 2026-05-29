@@ -4,19 +4,10 @@ import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 
 import { useRouter } from 'next/navigation';
 import { logoutAction } from '@/app/actions/auth';
 import { useDeleteUserMutation, useGetStaffUsersQuery } from '@/src/store/productsApi.js';
-import UserTable, { type StaffUserRow } from '@/src/component/UserTable';
-
-interface AuthUser {
-  id?: string | number;
-  name?: string;
-  username?: string;
-  role?: string;
-}
-
-interface ToastNotice {
-  kind: 'success' | 'error';
-  message: string;
-}
+import UserTable from '@/src/component/UserTable';
+import type { AuthUser } from '@/src/models/auth';
+import type { ToastNotice } from '@/src/models/ui';
+import type { StaffUserRow } from '@/src/models/user';
 
 const subscribeAuthUser = () => () => {};
 
@@ -84,7 +75,7 @@ export default function UserPage() {
 
   useEffect(() => {
     if (!currentUser) return;
-    if (String(currentUser.role ?? '').toLowerCase() !== 'admin') {
+    if (String(currentUser.role ?? '').trim().toLowerCase() !== 'admin') {
       router.replace('/');
     }
   }, [currentUser, router]);
@@ -148,7 +139,7 @@ export default function UserPage() {
     <div className="shopPage">
       <div className="shopHeader">
         <div className="shopHeaderRow">
-          <h1 className="shopTitle">UserPage</h1>
+          <h1 className="shopTitle">Staff Dashboard</h1>
           <div className="shopHeaderActions">
             {userLabel && <span className="userLabel">{userLabel}</span>}
             <button type="button" className="logoutLabel" onClick={handleLogout}>

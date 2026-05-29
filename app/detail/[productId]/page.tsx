@@ -1,15 +1,6 @@
 import { notFound } from 'next/navigation';
 import ProductDetailScreen from '../../../src/component/ProductDetailScreen';
-
-interface ApiProduct {
-  id?: string | number;
-  productName?: string;
-  image?: string;
-  summary?: string;
-  price?: number | string;
-  color?: string;
-  createdAt?: string;
-}
+import type { ApiProduct } from '@/src/models/product';
 
 // Returns null when product is not found (404), throws on network/server errors
 async function getProduct(productId: string): Promise<ApiProduct | null> {

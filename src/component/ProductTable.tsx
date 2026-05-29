@@ -3,7 +3,7 @@
 import { memo } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import type { ShopProduct } from '../types';
+import type { ShopProduct } from '../models/product';
 
 interface SortableHeaderProps {
   label: string;

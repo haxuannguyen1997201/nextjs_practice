@@ -3,16 +3,9 @@
 import { ReactNode, useState } from 'react';
 import Image from 'next/image';
 import { UseFormRegister, FieldErrors } from 'react-hook-form';
+import type { ProductFormValues } from '../models/product';
 import FormField from './FormField';
 import FormActions from './FormActions';
-
-interface ProductFormValues {
-  name: string;
-  image: string;
-  summary: string;
-  price: number | string;
-  color: string;
-}
 
 interface ProductFormProps {
   title: string;

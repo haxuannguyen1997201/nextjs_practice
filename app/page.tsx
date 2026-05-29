@@ -4,32 +4,12 @@ import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 
 import { useRouter } from 'next/navigation';
 import { logoutAction } from '@/app/actions/auth';
 import Toolbar from '@/src/component/Toolbar';
-import { ShopProduct } from '@/src/types.js';
+import type { AuthUser } from '@/src/models/auth';
+import type { ApiProduct, ShopProduct } from '@/src/models/product';
+import type { ToastNotice } from '@/src/models/ui';
 import { useDeleteProductMutation, useGetProductsQuery } from '@/src/store/productsApi.js';
 import ProductTable from '@/src/component/ProductTable';
 import FilterView from '@/src/component/FilterView';
-
-interface ApiProduct {
-  id?: string | number;
-  productName?: string;
-  image?: string;
-  summary?: string;
-  price?: number | string;
-  color?: string;
-  createdAt?: string;
-}
-
-interface AuthUser {
-  id?: string | number;
-  name?: string;
-  username?: string;
-  role?: string;
-}
-
-interface ToastNotice {
-  kind: 'success' | 'error';
-  message: string;
-}
 
 const subscribeAuthUser = () => () => {};
 
