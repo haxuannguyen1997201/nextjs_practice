@@ -8,4 +8,4 @@ export interface ApiUser {
   createdAt?: string;
 }
 
-export type StaffUserRow = Omit<ApiUser, 'role'>;
+export type StaffUserRow = Omit<ApiUser, 'role' | 'password'>;

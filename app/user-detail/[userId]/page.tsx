@@ -1,10 +1,10 @@
 import { notFound } from 'next/navigation';
 import UserDetailScreen from '@/src/component/UserDetailScreen';
 import type { ApiUser } from '@/src/models/user';
-
+import { getApiBaseUrl } from '@/src/utils/env';
 async function getUser(userId: string): Promise<ApiUser | null> {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-  if (!baseUrl || !userId) return null;
+  const baseUrl = getApiBaseUrl();
+  if (!userId) return null;
 
   const response = await fetch(`${baseUrl}/login/${encodeURIComponent(userId)}?role=staff`, {
     cache: 'no-store',

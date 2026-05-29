@@ -3,7 +3,7 @@ export interface ApiProduct {
   productName?: string;
   image?: string;
   summary?: string;
-  price?: number | string;
+  price?: number;
   color?: string;
   createdAt?: string;
 }
@@ -13,7 +13,7 @@ export interface ShopProduct {
   name?: string;
   image?: string;
   summary?: string;
-  price?: number | string;
+  price?: number;
   color?: string;
   createdAt?: string;
 }
@@ -22,6 +22,6 @@ export interface ProductFormValues {
   name: string;
   image: string;
   summary: string;
-  price: number | string;
+  price: number;
   color: string;
 }

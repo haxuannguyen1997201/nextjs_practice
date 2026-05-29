@@ -7,11 +7,16 @@ import Toolbar from '@/src/component/Toolbar';
 import type { AuthUser } from '@/src/models/auth';
 import type { ApiProduct, ShopProduct } from '@/src/models/product';
 import type { ToastNotice } from '@/src/models/ui';
-import { useDeleteProductMutation, useGetProductsQuery } from '@/src/store/productsApi.js';
+import { useDeleteProductMutation, useGetProductsQuery } from '@/src/store/productsApi';
 import ProductTable from '@/src/component/ProductTable';
 import FilterView from '@/src/component/FilterView';
 
-const subscribeAuthUser = () => () => {};
+const PAGE_SIZE = 20;
+
+function subscribeAuthUser(callback: () => void): () => void {
+  window.addEventListener('storage', callback);
+  return () => window.removeEventListener('storage', callback);
+}
 
 let cachedAuthUserRaw: string | null | undefined;
 let cachedAuthUser: AuthUser | null = null;
@@ -137,6 +142,7 @@ export default function ProductPage() {
   const [selectedColors, setSelectedColors] = useState<Set<string>>(() => new Set());
   const [sortKey, setSortKey] = useState('createdAt');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   const products = useMemo(() => (rawData as ApiProduct[]).map(toShopProduct), [rawData]);
 
@@ -180,6 +186,14 @@ export default function ProductPage() {
     });
   }, [products, search, selectedColors, sortKey, sortDir]);
 
+  const visibleProducts = useMemo(
+    () => sortedProducts.slice(0, visibleCount),
+    [sortedProducts, visibleCount]
+  );
+
+  const hasMoreProducts = visibleProducts.length < sortedProducts.length;
+  const remainingProductsCount = Math.max(sortedProducts.length - visibleProducts.length, 0);
+
   const onToggleColor = useCallback((color: string) => {
     setSelectedColors((prev) => {
       const next = new Set(prev);
@@ -187,29 +201,41 @@ export default function ProductPage() {
       else next.add(color);
       return next;
     });
+    setVisibleCount(PAGE_SIZE);
   }, []);
 
   const onReset = useCallback(() => {
     setSearch('');
     setSelectedColors(new Set());
+    setVisibleCount(PAGE_SIZE);
   }, []);
 
   const onSort = useCallback((key: string) => {
-    setSortKey((prevKey) => {
-      if (prevKey === key) {
-        setSortDir((prev) => (prev === 'asc' ? 'desc' : 'asc'));
-        return prevKey;
-      }
-      setSortDir(key === 'createdAt' ? 'desc' : 'asc');
-      return key;
-    });
+    if (sortKey === key) {
+      setSortDir((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+      setVisibleCount(PAGE_SIZE);
+      return;
+    }
+
+    setSortKey(key);
+    setSortDir(key === 'createdAt' ? 'desc' : 'asc');
+    setVisibleCount(PAGE_SIZE);
+  }, [sortKey]);
+
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
+    setVisibleCount(PAGE_SIZE);
+  }, []);
+
+  const handleLoadMoreProducts = useCallback(() => {
+    setVisibleCount((prev) => prev + PAGE_SIZE);
   }, []);
 
   return (
     <div className="shopPage">
       <div className="shopHeader">
         <div className="shopHeaderRow">
-          <h1 className="shopTitle">Shop</h1>
+          <h1 className="shopTitle">Product Dashboard</h1>
           <div className="shopHeaderActions">
             {userLabel && <span className="userLabel">{userLabel}</span>}
             <button type="button" className="logoutLabel" onClick={handleLogout}>
@@ -221,7 +247,7 @@ export default function ProductPage() {
 
       <div className="shopLayout">
         <main className="shopMain">
-          <Toolbar search={search} onSearchChange={setSearch} onReset={onReset} />
+          <Toolbar search={search} onSearchChange={handleSearchChange} onReset={onReset} />
 
           {isError && <p className="shopStatus shopStatusError">Failed to load products.</p>}
           {deleteError && <p className="shopStatus shopStatusError">Failed to delete product.</p>}
@@ -230,12 +256,15 @@ export default function ProductPage() {
             <p className="shopStatus">Loading products...</p>
           ) : (
             <ProductTable
-              sortedProducts={sortedProducts}
+              sortedProducts={visibleProducts}
               deletingIds={deletingIds}
               onConfirmDelete={onConfirmDelete}
               sortKey={sortKey}
               sortDir={sortDir}
               onSort={onSort}
+              hasMore={hasMoreProducts}
+              remainingCount={remainingProductsCount}
+              onLoadMore={handleLoadMoreProducts}
             />
           )}
         </main>

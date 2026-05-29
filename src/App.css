@@ -274,6 +274,27 @@
   font-weight: 700;
 }
 
+.passwordCell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.passwordValue {
+  font-family: monospace;
+  letter-spacing: 1px;
+}
+
+.passwordToggleBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 4px;
+  line-height: 1;
+  font-size: 14px;
+  color: #555;
+}
+
 .productSummary {
   color: var(--muted);
 }
@@ -310,6 +331,16 @@
 .shopEmpty {
   padding: 18px 12px;
   color: var(--muted);
+}
+
+.loadMoreWrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 14px;
+}
+
+.loadMoreButton {
+  min-width: 140px;
 }
 
 .shopSidebar {

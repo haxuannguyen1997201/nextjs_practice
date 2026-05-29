@@ -1,11 +1,12 @@
 import { notFound } from 'next/navigation';
 import ProductDetailScreen from '../../../src/component/ProductDetailScreen';
 import type { ApiProduct } from '@/src/models/product';
+import { getApiBaseUrl } from '@/src/utils/env';
 
 // Returns null when product is not found (404), throws on network/server errors
 async function getProduct(productId: string): Promise<ApiProduct | null> {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-  if (!baseUrl || !productId) return null;
+  const baseUrl = getApiBaseUrl();
+  if (!productId) return null;
 
   const response = await fetch(`${baseUrl}/products/${encodeURIComponent(productId)}`, {
     cache: 'no-store',

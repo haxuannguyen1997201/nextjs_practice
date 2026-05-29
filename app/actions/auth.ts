@@ -2,6 +2,8 @@
 
 import { z } from 'zod';
 import { cookies } from 'next/headers';
+import { createSessionToken } from '@/lib/session';
+import { getApiBaseUrl } from '@/src/utils/env';
 
 const loginSchema = z.object({
   username: z.string().trim().min(1, 'Username is required'),
@@ -45,10 +47,7 @@ async function fetchUsersByUsername(apiBase: string, username: string): Promise<
 }
 
 export async function loginAction(prevState: LoginState, formData: FormData): Promise<LoginState> {
-  const apiBase = process.env.NEXT_PUBLIC_API_URL;
-  if (!apiBase) {
-    return { success: false, message: 'API URL is not configured.' };
-  }
+  const apiBase = getApiBaseUrl();
 
   const parsed = loginSchema.safeParse({
     username: formData.get('username'),
@@ -92,19 +91,33 @@ export async function loginAction(prevState: LoginState, formData: FormData): Pr
 
   const cookieStore = await cookies();
   const role = String(safeUser.role ?? '').trim().toLowerCase();
-  cookieStore.set('auth_token', '1', {
+  const sessionToken = await createSessionToken(role);
+  if (!sessionToken) {
+    return { success: false, message: 'SESSION_SECRET is not configured.' };
+  }
+
+  cookieStore.set('session', sessionToken, {
     httpOnly: true,
     sameSite: 'lax',
     secure: process.env.NODE_ENV === 'production',
     path: '/',
     maxAge: 60 * 60 * 24,
   });
-  cookieStore.set('auth_role', role, {
+
+  // Remove legacy cookies after migrating to signed session cookie.
+  cookieStore.set('auth_token', '', {
     httpOnly: true,
     sameSite: 'lax',
     secure: process.env.NODE_ENV === 'production',
     path: '/',
-    maxAge: 60 * 60 * 24,
+    maxAge: 0,
+  });
+  cookieStore.set('auth_role', '', {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+    maxAge: 0,
   });
 
   return { success: true, user: safeUser as Record<string, unknown> };
@@ -112,6 +125,13 @@ export async function loginAction(prevState: LoginState, formData: FormData): Pr
 
 export async function logoutAction(): Promise<{ success: boolean }> {
   const cookieStore = await cookies();
+  cookieStore.set('session', '', {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+    maxAge: 0,
+  });
   cookieStore.set('auth_token', '', {
     httpOnly: true,
     sameSite: 'lax',

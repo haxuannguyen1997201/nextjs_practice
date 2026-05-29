@@ -4,6 +4,7 @@ import { memo } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import type { ShopProduct } from '../models/product';
+import { formatDDMMYYYY, formatGBP } from '../utils/formatters';
 
 interface SortableHeaderProps {
   label: string;
@@ -27,22 +28,9 @@ interface ProductTableProps {
   sortKey: string;
   sortDir: 'asc' | 'desc';
   onSort: (key: string) => void;
-}
-
-function formatDDMMYYYY(value: string | undefined): string {
-  if (!value) return '';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '';
-  const dd = String(date.getDate()).padStart(2, '0');
-  const mm = String(date.getMonth() + 1).padStart(2, '0');
-  const yyyy = String(date.getFullYear());
-  return `${dd}/${mm}/${yyyy}`;
-}
-
-function formatGBP(amount: number | string | undefined): string {
-  const numberAmount = Number(amount);
-  if (!Number.isFinite(numberAmount)) return '£0.00';
-  return `£${numberAmount.toFixed(2)}`;
+  hasMore: boolean;
+  remainingCount: number;
+  onLoadMore: () => void;
 }
 
 function SortableHeader({
@@ -53,7 +41,11 @@ function SortableHeader({
   onSort,
   className,
 }: SortableHeaderProps) {
-  const icon = currentSortKey !== sortKey ? ' ↕' : sortDir === 'asc' ? ' ↑' : ' ↓';
+  let icon = ' ↕';
+  if (currentSortKey === sortKey) {
+    icon = sortDir === 'asc' ? ' ↑' : ' ↓';
+  }
+
   return (
     <th className={className}>
       <button type="button" className="sortableHeader" onClick={() => onSort(sortKey)}>
@@ -126,59 +118,74 @@ export default memo(function ProductTable({
   sortKey,
   sortDir,
   onSort,
+  hasMore,
+  remainingCount,
+  onLoadMore,
 }: ProductTableProps) {
+  const loadMoreLabel = `Load more ${remainingCount} ${remainingCount === 1 ? 'item' : 'items'}`;
+
   return (
-    <div className="shopTableWrap">
-      <table className="shopTable">
-        <thead>
-          <tr>
-            <th className="colImage">Image</th>
-            <SortableHeader
-              label="Name"
-              sortKey="name"
-              currentSortKey={sortKey}
-              sortDir={sortDir}
-              onSort={onSort}
-            />
-            <th className="colSummary">Summary</th>
-            <SortableHeader
-              label="Created"
-              sortKey="createdAt"
-              currentSortKey={sortKey}
-              sortDir={sortDir}
-              onSort={onSort}
-              className="colCreated"
-            />
-            <SortableHeader
-              label="Price"
-              sortKey="price"
-              currentSortKey={sortKey}
-              sortDir={sortDir}
-              onSort={onSort}
-              className="colPrice"
-            />
-            <th className="colBuy">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {sortedProducts.length === 0 ? (
+    <div>
+      <div className="shopTableWrap">
+        <table className="shopTable">
+          <thead>
             <tr>
-              <td colSpan={6} className="shopEmpty">
-                No products match your filters.
-              </td>
-            </tr>
-          ) : (
-            sortedProducts.map((product) => (
-              <ProductRow
-                key={String(product.id)}
-                product={product}
-                deletingIds={deletingIds}
-                onConfirmDelete={onConfirmDelete}
+              <th className="colImage">Image</th>
+              <SortableHeader
+                label="Name"
+                sortKey="name"
+                currentSortKey={sortKey}
+                sortDir={sortDir}
+                onSort={onSort}
               />
-            ))
-          )}
-        </tbody>
-      </table>
+              <th className="colSummary">Summary</th>
+              <SortableHeader
+                label="Created"
+                sortKey="createdAt"
+                currentSortKey={sortKey}
+                sortDir={sortDir}
+                onSort={onSort}
+                className="colCreated"
+              />
+              <SortableHeader
+                label="Price"
+                sortKey="price"
+                currentSortKey={sortKey}
+                sortDir={sortDir}
+                onSort={onSort}
+                className="colPrice"
+              />
+              <th className="colBuy">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sortedProducts.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="shopEmpty">
+                  No products match your filters.
+                </td>
+              </tr>
+            ) : (
+              sortedProducts.map((product) => (
+                <ProductRow
+                  key={String(product.id)}
+                  product={product}
+                  deletingIds={deletingIds}
+                  onConfirmDelete={onConfirmDelete}
+                />
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {hasMore && (
+        <div className="loadMoreWrap">
+          <button type="button" className="secondaryButton loadMoreButton" onClick={onLoadMore}>
+            {loadMoreLabel}
+          </button>
+        </div>
+      )}
     </div>
   );
 });

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-function isValidHttpUrl(value) {
+function isValidHttpUrl(value: string): boolean {
   try {
     const url = new URL(value);
     return url.protocol === 'http:' || url.protocol === 'https:';
@@ -22,35 +22,40 @@ export const productFormSchema = z.object({
       if (value === '' || value == null) return NaN;
       return typeof value === 'number' ? value : Number(value);
     },
-    z
-      .number({ invalid_type_error: 'Price is required' })
-      .finite('Price is required')
-      .min(0, 'Price must be ≥ 0')
+    z.number().refine((val) => !Number.isNaN(val), 'Price is required').min(0, 'Price must be ≥ 0')
   ),
   color: z.string().trim().min(1, 'Color is required'),
 });
 
-export function createDefaultProductFormValues() {
+import type { ApiProduct } from '../models/product';
+
+export type ProductFormValues = z.infer<typeof productFormSchema>;
+
+export function createDefaultProductFormValues(): ProductFormValues {
   return {
     name: '',
     image: '',
     summary: '',
-    price: '',
+    price: 1,
     color: '',
   };
 }
 
-export function apiProductToFormValues(apiProduct) {
+export function apiProductToFormValues(product?: ApiProduct | null): ProductFormValues {
+  if (!product) {
+    return createDefaultProductFormValues();
+  }
+
   return {
-    name: apiProduct?.productName ?? '',
-    image: apiProduct?.image ?? '',
-    summary: apiProduct?.summary ?? '',
-    price: apiProduct?.price ?? '',
-    color: apiProduct?.color ?? '',
+    name: product.productName ?? '',
+    image: product.image ?? '',
+    summary: product.summary ?? '',
+    price: product.price ?? 1,
+    color: product.color ?? '',
   };
 }
 
-export function formValuesToApiPayload(values) {
+export function formValuesToApiPayload(values: ProductFormValues) {
   return {
     productName: values.name,
     image: values.image,

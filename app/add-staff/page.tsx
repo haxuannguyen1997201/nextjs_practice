@@ -1,15 +1,13 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import Image from 'next/image';
+import { useMemo, useState } from 'react';
 import { Resolver, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
-import { useUpdateUserMutation } from '../store/productsApi';
-import type { ApiUser } from '../models/user';
-import FormField from './FormField';
-import FormActions from './FormActions';
+import { useCreateUserMutation, useLazyGetStaffUserByUsernameQuery } from '@/src/store/productsApi';
+import FormField from '@/src/component/FormField';
+import FormActions from '@/src/component/FormActions';
 
 interface UserFormValues {
   avatar: string;
@@ -25,31 +23,26 @@ const userFormSchema = z.object({
   password: z.string().trim().min(6, 'Password must be at least 6 characters'),
 });
 
-interface UserDetailScreenProps {
-  userId: string;
-  initialUser: ApiUser | null;
-}
-
-export default function UserDetailScreen({ userId, initialUser }: UserDetailScreenProps) {
+export default function AddStaffPage() {
   const router = useRouter();
-  const [updateUser] = useUpdateUserMutation();
-  const [submitError, setSubmitError] = useState<unknown>(null);
+  const [createUser] = useCreateUserMutation();
+  const [checkUsername] = useLazyGetStaffUserByUsernameQuery();
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const defaultValues = useMemo(
-    () =>
-      ({
-        avatar: '',
-        name: '',
-        username: '',
-        password: '',
-      }) as UserFormValues,
+    () => ({
+      avatar: '',
+      name: '',
+      username: '',
+      password: '',
+    }) as UserFormValues,
     []
   );
 
   const {
     register,
     handleSubmit,
-    reset,
+    setError,
     control,
     formState: { errors, isSubmitting },
   } = useForm<UserFormValues>({
@@ -58,31 +51,47 @@ export default function UserDetailScreen({ userId, initialUser }: UserDetailScre
     mode: 'onSubmit',
   });
 
-  useEffect(() => {
-    if (!initialUser) return;
-    reset({
-      avatar: initialUser.avatar ?? '',
-      name: initialUser.name ?? '',
-      username: initialUser.username ?? '',
-      password: initialUser.password ?? '',
-    });
-  }, [initialUser, reset]);
-
   async function onSubmit(values: UserFormValues) {
     setSubmitError(null);
     try {
-      await updateUser({
-        userId,
+      let existingUsers = [] as unknown[];
+      try {
+        existingUsers = await checkUsername(values.username).unwrap();
+      } catch (usernameError) {
+        if (
+          typeof usernameError === 'object' &&
+          usernameError !== null &&
+          'status' in usernameError &&
+          (usernameError as { status: number }).status === 404
+        ) {
+          existingUsers = [];
+        } else {
+          throw usernameError;
+        }
+      }
+
+      if (existingUsers.length > 0) {
+        setError('username', {
+          type: 'manual',
+          message: 'Username already exists. Choose a different one.',
+        });
+        return;
+      }
+
+      await createUser({
         payload: {
           avatar: values.avatar,
           name: values.name,
-          password: values.password,
           username: values.username,
+          password: values.password,
+          role: 'staff',
+          createdAt: new Date().toISOString(),
         },
       }).unwrap();
+
       router.push('/users');
     } catch (err) {
-      setSubmitError(err);
+      setSubmitError('Failed to create staff user. Please try again.');
     }
   }
 
@@ -96,7 +105,7 @@ export default function UserDetailScreen({ userId, initialUser }: UserDetailScre
     <div className="shopPage">
       <div className="shopHeader">
         <div className="shopHeaderRow">
-          <h1 className="shopTitle">User detail</h1>
+          <h1 className="shopTitle">Add staff</h1>
           <div className="shopHeaderActions">
             <button type="button" className="secondaryButton" onClick={goBack}>
               Back
@@ -151,13 +160,12 @@ export default function UserDetailScreen({ userId, initialUser }: UserDetailScre
                 </FormField>
               </div>
 
-              {!!submitError && <p className="shopStatus shopStatusError">Failed to edit user.</p>}
+              {!!submitError && <p className="shopStatus shopStatusError">{submitError}</p>}
 
               <FormActions
                 onCancel={goBack}
                 isSubmitting={isSubmitting}
-                submitLabel="Edit user"
-                submitDisabled={userId.length === 0}
+                submitLabel="Create staff"
               />
             </form>
           </div>
@@ -168,7 +176,7 @@ export default function UserDetailScreen({ userId, initialUser }: UserDetailScre
             <h2 className="filterTitle">Avatar preview</h2>
             <div className="addProductTips">
               {avatarPreview ? (
-                <Image
+                <img
                   className="imagePreviewImg"
                   src={avatarPreview}
                   alt="Avatar preview"

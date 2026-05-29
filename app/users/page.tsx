@@ -1,15 +1,21 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { logoutAction } from '@/app/actions/auth';
-import { useDeleteUserMutation, useGetStaffUsersQuery } from '@/src/store/productsApi.js';
+import { useDeleteUserMutation, useGetStaffUsersQuery } from '@/src/store/productsApi';
 import UserTable from '@/src/component/UserTable';
 import type { AuthUser } from '@/src/models/auth';
 import type { ToastNotice } from '@/src/models/ui';
 import type { StaffUserRow } from '@/src/models/user';
 
-const subscribeAuthUser = () => () => {};
+const PAGE_SIZE = 20;
+
+function subscribeAuthUser(callback: () => void): () => void {
+  window.addEventListener('storage', callback);
+  return () => window.removeEventListener('storage', callback);
+}
 
 let cachedAuthUserRaw: string | null | undefined;
 let cachedAuthUser: AuthUser | null = null;
@@ -47,6 +53,7 @@ export default function UserPage() {
   const { data: rawData = [], isLoading, isError } = useGetStaffUsersQuery(undefined);
   const [deleteUser, { error: deleteError }] = useDeleteUserMutation();
   const [search, setSearch] = useState('');
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [deletingIds, setDeletingIds] = useState<Set<string>>(() => new Set());
   const [pendingDelete, setPendingDelete] = useState<StaffUserRow | null>(null);
   const [toastNotice, setToastNotice] = useState<ToastNotice | null>(null);
@@ -64,6 +71,14 @@ export default function UserPage() {
       return name.includes(query) || username.includes(query);
     });
   }, [users, search]);
+
+  const visibleUsers = useMemo(
+    () => filteredUsers.slice(0, visibleCount),
+    [filteredUsers, visibleCount]
+  );
+
+  const hasMoreUsers = visibleUsers.length < filteredUsers.length;
+  const remainingUsersCount = Math.max(filteredUsers.length - visibleUsers.length, 0);
 
   useEffect(() => {
     if (!toastNotice) return;
@@ -135,6 +150,15 @@ export default function UserPage() {
     setPendingDelete(null);
   }, []);
 
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
+    setVisibleCount(PAGE_SIZE);
+  }, []);
+
+  const handleLoadMoreUsers = useCallback(() => {
+    setVisibleCount((prev) => prev + PAGE_SIZE);
+  }, []);
+
   return (
     <div className="shopPage">
       <div className="shopHeader">
@@ -156,10 +180,13 @@ export default function UserPage() {
             className="shopSearchInput"
             type="text"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => handleSearchChange(e.target.value)}
             placeholder="Search users..."
           />
         </label>
+        <Link href="/add-staff" className="primaryButton shopAddButton">
+          Add staff
+        </Link>
       </div>
 
       {isError && <p className="shopStatus shopStatusError">Failed to load users.</p>}
@@ -168,7 +195,14 @@ export default function UserPage() {
       {isLoading ? (
         <p className="shopStatus">Loading users...</p>
       ) : (
-        <UserTable users={filteredUsers} deletingIds={deletingIds} onConfirmDelete={onConfirmDelete} />
+        <UserTable
+          users={visibleUsers}
+          deletingIds={deletingIds}
+          onConfirmDelete={onConfirmDelete}
+          hasMore={hasMoreUsers}
+          remainingCount={remainingUsersCount}
+          onLoadMore={handleLoadMoreUsers}
+        />
       )}
 
       {pendingDelete && (

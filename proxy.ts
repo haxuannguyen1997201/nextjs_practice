@@ -1,18 +1,17 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { verifySessionToken } from '@/lib/session';
 
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   if (pathname.startsWith('/api/')) {
     return NextResponse.next();
   }
 
-  const authToken = request.cookies.get('auth_token')?.value;
-  const authRole = String(request.cookies.get('auth_role')?.value ?? '')
-    .trim()
-    .toLowerCase();
-
-  const isAuthenticated = Boolean(authToken);
+  const sessionCookie = request.cookies.get('session')?.value;
+  const session = sessionCookie ? await verifySessionToken(sessionCookie) : null;
+  const authRole = String(session?.role ?? '').trim().toLowerCase();
+  const isAuthenticated = Boolean(session);
 
   if (!isAuthenticated && pathname !== '/login') {
     const loginUrl = request.nextUrl.clone();

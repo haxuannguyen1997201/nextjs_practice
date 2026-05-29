@@ -19,9 +19,7 @@ interface ProductFormProps {
   isLoading?: boolean;
   loadError?: unknown;
   submitError?: unknown;
-  submitErrorMessage?: string;
   imagePreviewUrl?: string;
-  imagePreviewAlt?: string;
   tips?: ReactNode;
 }
 
@@ -37,16 +35,14 @@ export default function ProductForm({
   isLoading = false,
   loadError = null,
   submitError = null,
-  submitErrorMessage = 'Something went wrong.',
   imagePreviewUrl = '',
-  imagePreviewAlt = 'Product image preview',
   tips,
 }: ProductFormProps) {
   const disabled = isLoading || isSubmitting;
-  const [brokenPreviewUrl, setBrokenPreviewUrl] = useState('');
+  const [failedPreviewUrl, setFailedPreviewUrl] = useState('');
 
   const previewUrl = String(imagePreviewUrl ?? '').trim();
-  const isPreviewBroken = previewUrl.length > 0 && previewUrl === brokenPreviewUrl;
+  const isPreviewFailed = previewUrl.length > 0 && previewUrl === failedPreviewUrl;
 
   return (
     <div className="shopPage">
@@ -116,14 +112,14 @@ export default function ProductForm({
 
                     {previewUrl.length > 0 && (
                       <div className="imagePreview" aria-live="polite">
-                        {!isPreviewBroken ? (
+                        {!isPreviewFailed ? (
                           <Image
                             className="imagePreviewImg"
                             src={previewUrl}
-                            alt={imagePreviewAlt}
+                            alt="Product image preview"
                             width={520}
                             height={260}
-                            onError={() => setBrokenPreviewUrl(previewUrl)}
+                            onError={() => setFailedPreviewUrl(previewUrl)}
                           />
                         ) : (
                           <p className="imagePreviewFallback">Cannot load this image URL.</p>
@@ -148,7 +144,7 @@ export default function ProductForm({
                 </div>
 
                 {!!submitError && (
-                  <p className="shopStatus shopStatusError">{submitErrorMessage}</p>
+                  <p className="shopStatus shopStatusError">Failed to save product.</p>
                 )}
 
                 <FormActions

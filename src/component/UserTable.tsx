@@ -4,21 +4,15 @@ import { memo } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import type { StaffUserRow } from '../models/user';
+import { formatDDMMYYYY } from '../utils/formatters';
 
 interface UserTableProps {
   users: StaffUserRow[];
   deletingIds: Set<string>;
   onConfirmDelete: (user: StaffUserRow) => void;
-}
-
-function formatDDMMYYYY(value: string | undefined): string {
-  if (!value) return '';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '';
-  const dd = String(date.getDate()).padStart(2, '0');
-  const mm = String(date.getMonth() + 1).padStart(2, '0');
-  const yyyy = String(date.getFullYear());
-  return `${dd}/${mm}/${yyyy}`;
+  hasMore: boolean;
+  remainingCount: number;
+  onLoadMore: () => void;
 }
 
 function UserRow({
@@ -65,7 +59,6 @@ function UserRow({
       </td>
       <td className="productName">{user.name}</td>
       <td className="productSummary">{user.username}</td>
-      <td className="productSummary">{user.password}</td>
       <td className="productCreated">{formatDDMMYYYY(user.createdAt)}</td>
       <td className="productBuy">
         <button
@@ -84,39 +77,57 @@ function UserRow({
   );
 }
 
-export default memo(function UserTable({ users, deletingIds, onConfirmDelete }: UserTableProps) {
+export default memo(function UserTable({
+  users,
+  deletingIds,
+  onConfirmDelete,
+  hasMore,
+  remainingCount,
+  onLoadMore,
+}: UserTableProps) {
+  const loadMoreLabel = `Load more ${remainingCount} ${remainingCount === 1 ? 'item' : 'items'}`;
+
   return (
-    <div className="shopTableWrap">
-      <table className="shopTable">
-        <thead>
-          <tr>
-            <th className="colImage">Avatar</th>
-            <th>Name</th>
-            <th>Username</th>
-            <th>Password</th>
-            <th className="colCreated">Create date</th>
-            <th className="colBuy">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.length === 0 ? (
+    <div>
+      <div className="shopTableWrap">
+        <table className="shopTable">
+          <thead>
             <tr>
-              <td colSpan={6} className="shopEmpty">
-                No users match your search.
-              </td>
+              <th className="colImage">Avatar</th>
+              <th>Name</th>
+              <th>Username</th>
+              <th className="colCreated">Create date</th>
+              <th className="colBuy">Action</th>
             </tr>
-          ) : (
-            users.map((user) => (
-              <UserRow
-                key={String(user.id)}
-                user={user}
-                deletingIds={deletingIds}
-                onConfirmDelete={onConfirmDelete}
-              />
-            ))
-          )}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {users.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="shopEmpty">
+                  No users match your search.
+                </td>
+              </tr>
+            ) : (
+              users.map((user) => (
+                <UserRow
+                  key={String(user.id)}
+                  user={user}
+                  deletingIds={deletingIds}
+                  onConfirmDelete={onConfirmDelete}
+                />
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {hasMore && (
+        <div className="loadMoreWrap">
+          <button type="button" className="secondaryButton loadMoreButton" onClick={onLoadMore}>
+            {loadMoreLabel}
+          </button>
+        </div>
+      )}
     </div>
   );
 });

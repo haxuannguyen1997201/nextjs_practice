@@ -4,13 +4,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { Resolver, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
-import { useUpdateProductMutation } from '../store/productsApi.js';
+import { useUpdateProductMutation } from '../store/productsApi';
 import {
   apiProductToFormValues,
   createDefaultProductFormValues,
   formValuesToApiPayload,
   productFormSchema,
-} from '../api/productFormModel.js';
+} from '../api/productFormModel';
 import type { ApiProduct, ProductFormValues } from '../models/product';
 import ProductForm from './ProductForm';
 
@@ -62,8 +62,6 @@ export default function ProductDetailScreen({
   }
 
   const previewUrl = useWatch({ control, name: 'image' });
-  const previewName = useWatch({ control, name: 'name' });
-  const previewAlt = previewName || 'Product image preview';
 
   return (
     <ProductForm
@@ -78,9 +76,7 @@ export default function ProductDetailScreen({
       isLoading={false}
       loadError={!initialProduct && productId.length > 0 ? new Error('Not found') : null}
       submitError={submitError}
-      submitErrorMessage="Failed to edit product."
       imagePreviewUrl={previewUrl}
-      imagePreviewAlt={previewAlt}
       tips={<p className="shopStatus">Edit and click &quot;Edit product&quot; to save.</p>}
     />
   );

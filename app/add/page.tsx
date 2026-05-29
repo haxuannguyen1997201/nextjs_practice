@@ -4,12 +4,12 @@ import { useMemo, useState } from 'react';
 import { Resolver, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
-import { useCreateProductMutation } from '@/src/store/productsApi.js';
+import { useCreateProductMutation } from '@/src/store/productsApi';
 import {
   createDefaultProductFormValues,
   formValuesToApiPayload,
   productFormSchema,
-} from '@/src/api/productFormModel.js';
+} from '@/src/api/productFormModel';
 import type { ProductFormValues } from '@/src/models/product';
 import ProductForm from '@/src/component/ProductForm';
 
@@ -46,8 +46,6 @@ export default function AddProductPage() {
   }
 
   const previewUrl = useWatch({ control, name: 'image' });
-  const previewName = useWatch({ control, name: 'name' });
-  const previewAlt = previewName || 'Product image preview';
 
   return (
     <ProductForm
@@ -59,9 +57,7 @@ export default function AddProductPage() {
       onCancel={goBack}
       submitLabel="Save product"
       submitError={submitError}
-      submitErrorMessage="Failed to add product."
       imagePreviewUrl={previewUrl}
-      imagePreviewAlt={previewAlt}
       tips={
         <>
           <p className="shopStatus">Use a public image URL (http/https).</p>
