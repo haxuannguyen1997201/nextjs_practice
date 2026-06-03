@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import ProductDetailScreen from '../../../src/component/ProductDetailScreen';
+import ProductDetailScreen from '@/src/component/ProductDetailScreen';
 import type { ApiProduct } from '@/src/models/product';
 import { getApiBaseUrl } from '@/src/utils/env';
 

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
-import StoreProvider from '../src/store/StoreProvider';
-import '../src/index.css';
-import '../src/App.css';
+import StoreProvider from '@/src/store/StoreProvider';
+import '@/src/index.css';
+import '@/src/App.css';
 
 export const metadata: Metadata = {
   title: 'Shop',
