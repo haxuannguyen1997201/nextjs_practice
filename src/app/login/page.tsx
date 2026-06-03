@@ -19,8 +19,18 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (state?.success) {
-      dispatch(setUser(state.user as AuthUser));
-      const role = String((state.user as { role?: string })?.role ?? '')
+      const user = state.user as AuthUser;
+      dispatch(setUser(user));
+      
+      // Also save directly to localStorage as a fallback
+      try {
+        const authState = { user };
+        localStorage.setItem('persist:root', JSON.stringify({ auth: JSON.stringify(authState) }));
+      } catch {
+        // Silently fail if localStorage is not available
+      }
+      
+      const role = String((user as { role?: string })?.role ?? '')
         .trim()
         .toLowerCase();
       router.push(role === 'admin' ? '/users' : '/');
