@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { loginAction, type LoginState } from '@/app/actions/auth';
+import { loginAction, type LoginState } from '@/src/app/actions/auth';
 import FormField from '@/src/component/FormField';
 import SubmitButton from '@/src/component/SubmitButton';
 

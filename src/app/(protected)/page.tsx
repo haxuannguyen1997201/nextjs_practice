@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { useRouter } from 'next/navigation';
-import { logoutAction } from '@/app/actions/auth';
+import { logoutAction } from '@/src/app/actions/auth';
 import Toolbar from '@/src/component/Toolbar';
 import type { AuthUser } from '@/src/models/auth';
 import type { ApiProduct, ShopProduct } from '@/src/models/product';

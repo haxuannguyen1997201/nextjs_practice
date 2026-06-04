@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { logoutAction } from '@/app/actions/auth';
+import { logoutAction } from '@/src/app/actions/auth';
 import { useDeleteUserMutation, useGetStaffUsersQuery } from '@/src/store/productsApi';
 import UserTable from '@/src/component/UserTable';
 import type { AuthUser } from '@/src/models/auth';
