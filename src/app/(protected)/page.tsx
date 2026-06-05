@@ -1,15 +1,17 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useDispatch } from 'react-redux';
 import { logoutAction } from '@/src/app/actions/auth';
 import Toolbar from '@/src/component/Toolbar';
 import type { ApiProduct, ShopProduct } from '@/src/models/product';
-import type { ToastNotice } from '@/src/models/ui';
 import { useDeleteProductMutation, useGetProductsQuery } from '@/src/store/productsApi';
 import ProductTable from '@/src/component/ProductTable';
 import FilterView from '@/src/component/FilterView';
 import { useAuthUser } from '@/src/hooks/useAuthUser';
+import { useProductSearch } from '@/src/hooks/useProductSearch';
+import { useDeleteConfirmation } from '@/src/hooks/useDeleteConfirmation';
+import { useToastNotification } from '@/src/hooks/useToastNotification';
 import { clearUser } from '@/src/store/authSlice';
 import { persistor } from '@/src/store/store';
 import type { AppDispatch } from '@/src/store/store';
@@ -27,170 +29,55 @@ function toShopProduct(apiProduct: ApiProduct): ShopProduct {
   };
 }
 
-const PAGE_SIZE = 20;
-
 export default function ProductPage() {
   const dispatch = useDispatch<AppDispatch>();
   const { data: rawData = [], isLoading, isError } = useGetProductsQuery(undefined);
   const [deleteProduct, { error: deleteError }] = useDeleteProductMutation();
-  const [deletingIds, setDeletingIds] = useState<Set<string>>(() => new Set());
-  const [pendingDelete, setPendingDelete] = useState<ShopProduct | null>(null);
-  const [toastNotice, setToastNotice] = useState<ToastNotice | null>(null);
-  const { user: currentUser, label: userLabel } = useAuthUser();
 
-  useEffect(() => {
-    if (!toastNotice) return;
-    const timeoutId = window.setTimeout(() => {
-      setToastNotice(null);
-    }, 2600);
-    return () => window.clearTimeout(timeoutId);
-  }, [toastNotice]);
+  const { label: userLabel } = useAuthUser();
+  const { toastNotice, showToast } = useToastNotification();
+
+  const products = useMemo(() => (rawData as ApiProduct[]).map(toShopProduct), [rawData]);
+
+  const {
+    search,
+    selectedColors,
+    sortKey,
+    sortDir,
+    colorOptions,
+    visibleProducts,
+    hasMore,
+    remainingCount,
+    onSearchChange,
+    onToggleColor,
+    onReset,
+    onSort,
+    onLoadMore,
+  } = useProductSearch(products);
+
+  const { pendingDelete, deletingIds, onConfirmDelete, onDeleteConfirmed, onDeleteCanceled } =
+    useDeleteConfirmation<ShopProduct>(async (product) => {
+      const id = String(product.id ?? '');
+      const name = String(product.name ?? '').trim();
+      try {
+        await deleteProduct(id).unwrap();
+        showToast({
+          kind: 'success',
+          message: name.length > 0 ? `Deleted "${name}".` : 'Product deleted.',
+        });
+      } catch {
+        showToast({
+          kind: 'error',
+          message: name.length > 0 ? `Failed to delete "${name}".` : 'Failed to delete product.',
+        });
+      }
+    });
 
   async function handleLogout() {
     dispatch(clearUser());
     await persistor.flush();
     await logoutAction();
   }
-
-  const onConfirmDelete = useCallback(async (product: ShopProduct) => {
-    const id = String(product?.id ?? '');
-    if (id.length === 0) return;
-    setPendingDelete(product);
-  }, []);
-
-  const handleDeleteConfirmed = useCallback(async () => {
-    if (!pendingDelete) return;
-
-    const id = String(pendingDelete?.id ?? '');
-    if (id.length === 0) {
-      setPendingDelete(null);
-      return;
-    }
-
-    const name = String(pendingDelete?.name ?? '').trim();
-
-    setDeletingIds((prev) => {
-      const next = new Set(prev);
-      next.add(id);
-      return next;
-    });
-    setPendingDelete(null);
-    try {
-      await deleteProduct(id).unwrap();
-      setToastNotice({
-        kind: 'success',
-        message: name.length > 0 ? `Deleted "${name}".` : 'Product deleted.',
-      });
-    } catch {
-      setToastNotice({
-        kind: 'error',
-        message: name.length > 0 ? `Failed to delete "${name}".` : 'Failed to delete product.',
-      });
-    } finally {
-      setDeletingIds((prev) => {
-        const next = new Set(prev);
-        next.delete(id);
-        return next;
-      });
-    }
-  }, [deleteProduct, pendingDelete]);
-
-  const handleDeleteCanceled = useCallback(() => {
-    setPendingDelete(null);
-  }, []);
-
-  const [search, setSearch] = useState('');
-  const [selectedColors, setSelectedColors] = useState<Set<string>>(() => new Set());
-  const [sortKey, setSortKey] = useState('createdAt');
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
-
-  const products = useMemo(() => (rawData as ApiProduct[]).map(toShopProduct), [rawData]);
-
-  const colorOptions = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const product of products) {
-      const color = product.color ?? '';
-      counts.set(color, (counts.get(color) ?? 0) + 1);
-    }
-    return [...counts.entries()]
-      .map(([color, count]) => ({ color, count }))
-      .sort((a, b) => b.count - a.count || a.color.localeCompare(b.color));
-  }, [products]);
-
-  const sortedProducts = useMemo(() => {
-    const query = search.trim().toLowerCase();
-    const hasColorFilter = selectedColors.size > 0;
-
-    const filtered = products.filter((p) => {
-      const matchesSearch = query.length === 0 || (p.name ?? '').toLowerCase().includes(query);
-      const matchesColor = !hasColorFilter || selectedColors.has(p.color ?? '');
-      return matchesSearch && matchesColor;
-    });
-
-    return filtered.sort((a, b) => {
-      let aVal: number | string = a[sortKey as keyof ShopProduct] as number | string;
-      let bVal: number | string = b[sortKey as keyof ShopProduct] as number | string;
-      if (sortKey === 'createdAt') {
-        aVal = aVal ? new Date(aVal).getTime() : 0;
-        bVal = bVal ? new Date(bVal).getTime() : 0;
-      } else if (sortKey === 'price') {
-        aVal = Number(aVal) || 0;
-        bVal = Number(bVal) || 0;
-      } else {
-        aVal = String(aVal ?? '').toLowerCase();
-        bVal = String(bVal ?? '').toLowerCase();
-      }
-      if (aVal < bVal) return sortDir === 'asc' ? -1 : 1;
-      if (aVal > bVal) return sortDir === 'asc' ? 1 : -1;
-      return 0;
-    });
-  }, [products, search, selectedColors, sortKey, sortDir]);
-
-  const visibleProducts = useMemo(
-    () => sortedProducts.slice(0, visibleCount),
-    [sortedProducts, visibleCount]
-  );
-
-  const hasMoreProducts = visibleProducts.length < sortedProducts.length;
-  const remainingProductsCount = Math.max(sortedProducts.length - visibleProducts.length, 0);
-
-  const onToggleColor = useCallback((color: string) => {
-    setSelectedColors((prev) => {
-      const next = new Set(prev);
-      if (next.has(color)) next.delete(color);
-      else next.add(color);
-      return next;
-    });
-    setVisibleCount(PAGE_SIZE);
-  }, []);
-
-  const onReset = useCallback(() => {
-    setSearch('');
-    setSelectedColors(new Set());
-    setVisibleCount(PAGE_SIZE);
-  }, []);
-
-  const onSort = useCallback((key: string) => {
-    if (sortKey === key) {
-      setSortDir((prev) => (prev === 'asc' ? 'desc' : 'asc'));
-      setVisibleCount(PAGE_SIZE);
-      return;
-    }
-
-    setSortKey(key);
-    setSortDir(key === 'createdAt' ? 'desc' : 'asc');
-    setVisibleCount(PAGE_SIZE);
-  }, [sortKey]);
-
-  const handleSearchChange = useCallback((value: string) => {
-    setSearch(value);
-    setVisibleCount(PAGE_SIZE);
-  }, []);
-
-  const handleLoadMoreProducts = useCallback(() => {
-    setVisibleCount((prev) => prev + PAGE_SIZE);
-  }, []);
 
   return (
     <div className="shopPage">
@@ -208,7 +95,7 @@ export default function ProductPage() {
 
       <div className="shopLayout">
         <main className="shopMain">
-          <Toolbar search={search} onSearchChange={handleSearchChange} onReset={onReset} />
+          <Toolbar search={search} onSearchChange={onSearchChange} onReset={onReset} />
 
           {isError && <p className="shopStatus shopStatusError">Failed to load products.</p>}
           {deleteError && <p className="shopStatus shopStatusError">Failed to delete product.</p>}
@@ -223,9 +110,9 @@ export default function ProductPage() {
               sortKey={sortKey}
               sortDir={sortDir}
               onSort={onSort}
-              hasMore={hasMoreProducts}
-              remainingCount={remainingProductsCount}
-              onLoadMore={handleLoadMoreProducts}
+              hasMore={hasMore}
+              remainingCount={remainingCount}
+              onLoadMore={onLoadMore}
             />
           )}
         </main>
@@ -243,10 +130,10 @@ export default function ProductPage() {
             Delete {pendingDelete.name ? `"${pendingDelete.name}"` : 'this product'}?
           </p>
           <div className="confirmToastActions">
-            <button type="button" className="secondaryButton" onClick={handleDeleteCanceled}>
+            <button type="button" className="secondaryButton" onClick={onDeleteCanceled}>
               Cancel
             </button>
-            <button type="button" className="deleteProduct" onClick={handleDeleteConfirmed}>
+            <button type="button" className="deleteProduct" onClick={onDeleteConfirmed}>
               Delete
             </button>
           </div>

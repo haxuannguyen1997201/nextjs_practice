@@ -1,60 +1,45 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useDispatch } from 'react-redux';
 import { logoutAction } from '@/src/app/actions/auth';
 import { useDeleteUserMutation, useGetStaffUsersQuery } from '@/src/store/productsApi';
 import UserTable from '@/src/component/UserTable';
-import type { ToastNotice } from '@/src/models/ui';
 import type { StaffUserRow } from '@/src/models/user';
 import { useAuthUser } from '@/src/hooks/useAuthUser';
+import { useUserSearch } from '@/src/hooks/useUserSearch';
+import { useDeleteConfirmation } from '@/src/hooks/useDeleteConfirmation';
+import { useToastNotification } from '@/src/hooks/useToastNotification';
 import { clearUser } from '@/src/store/authSlice';
 import { persistor } from '@/src/store/store';
 import type { AppDispatch } from '@/src/store/store';
-
-const PAGE_SIZE = 20;
 
 export default function UserPage() {
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
   const { data: rawData = [], isLoading, isError } = useGetStaffUsersQuery(undefined);
   const [deleteUser, { error: deleteError }] = useDeleteUserMutation();
-  const [search, setSearch] = useState('');
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
-  const [deletingIds, setDeletingIds] = useState<Set<string>>(() => new Set());
-  const [pendingDelete, setPendingDelete] = useState<StaffUserRow | null>(null);
-  const [toastNotice, setToastNotice] = useState<ToastNotice | null>(null);
+
   const { user: currentUser, label: userLabel } = useAuthUser();
-
-  const users = useMemo(() => rawData as StaffUserRow[], [rawData]);
-
-  const filteredUsers = useMemo(() => {
-    const query = search.trim().toLowerCase();
-    if (!query) return users;
-    return users.filter((user) => {
-      const name = String(user.name ?? '').toLowerCase();
-      const username = String(user.username ?? '').toLowerCase();
-      return name.includes(query) || username.includes(query);
+  const { toastNotice, showToast } = useToastNotification();
+  const { search, visibleUsers, hasMore, remainingCount, onSearchChange, onLoadMore } =
+    useUserSearch(rawData as StaffUserRow[]);
+  const { pendingDelete, deletingIds, onConfirmDelete, onDeleteConfirmed, onDeleteCanceled } =
+    useDeleteConfirmation<StaffUserRow>(async (user) => {
+      const id = String(user.id ?? '');
+      const name = String(user.name ?? user.username ?? '').trim();
+      try {
+        await deleteUser(id).unwrap();
+        showToast({ kind: 'success', message: name ? `Deleted "${name}".` : 'User deleted.' });
+      } catch {
+        showToast({
+          kind: 'error',
+          message: name ? `Failed to delete "${name}".` : 'Failed to delete user.',
+        });
+      }
     });
-  }, [users, search]);
-
-  const visibleUsers = useMemo(
-    () => filteredUsers.slice(0, visibleCount),
-    [filteredUsers, visibleCount]
-  );
-
-  const hasMoreUsers = visibleUsers.length < filteredUsers.length;
-  const remainingUsersCount = Math.max(filteredUsers.length - visibleUsers.length, 0);
-
-  useEffect(() => {
-    if (!toastNotice) return;
-    const timeoutId = window.setTimeout(() => {
-      setToastNotice(null);
-    }, 2600);
-    return () => window.clearTimeout(timeoutId);
-  }, [toastNotice]);
 
   useEffect(() => {
     if (currentUser === null) {
@@ -71,61 +56,6 @@ export default function UserPage() {
     await persistor.flush();
     await logoutAction();
   }
-
-  const onConfirmDelete = useCallback((user: StaffUserRow) => {
-    const id = String(user?.id ?? '');
-    if (id.length === 0) return;
-    setPendingDelete(user);
-  }, []);
-
-  const handleDeleteConfirmed = useCallback(async () => {
-    if (!pendingDelete) return;
-    const id = String(pendingDelete.id ?? '');
-    if (!id) {
-      setPendingDelete(null);
-      return;
-    }
-
-    const name = String(pendingDelete.name ?? pendingDelete.username ?? '').trim();
-    setDeletingIds((prev) => {
-      const next = new Set(prev);
-      next.add(id);
-      return next;
-    });
-    setPendingDelete(null);
-
-    try {
-      await deleteUser(id).unwrap();
-      setToastNotice({
-        kind: 'success',
-        message: name ? `Deleted "${name}".` : 'User deleted.',
-      });
-    } catch {
-      setToastNotice({
-        kind: 'error',
-        message: name ? `Failed to delete "${name}".` : 'Failed to delete user.',
-      });
-    } finally {
-      setDeletingIds((prev) => {
-        const next = new Set(prev);
-        next.delete(id);
-        return next;
-      });
-    }
-  }, [deleteUser, pendingDelete]);
-
-  const handleDeleteCanceled = useCallback(() => {
-    setPendingDelete(null);
-  }, []);
-
-  const handleSearchChange = useCallback((value: string) => {
-    setSearch(value);
-    setVisibleCount(PAGE_SIZE);
-  }, []);
-
-  const handleLoadMoreUsers = useCallback(() => {
-    setVisibleCount((prev) => prev + PAGE_SIZE);
-  }, []);
 
   return (
     <div className="shopPage">
@@ -148,7 +78,7 @@ export default function UserPage() {
             className="shopSearchInput"
             type="text"
             value={search}
-            onChange={(e) => handleSearchChange(e.target.value)}
+            onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Search users..."
           />
         </label>
@@ -167,9 +97,9 @@ export default function UserPage() {
           users={visibleUsers}
           deletingIds={deletingIds}
           onConfirmDelete={onConfirmDelete}
-          hasMore={hasMoreUsers}
-          remainingCount={remainingUsersCount}
-          onLoadMore={handleLoadMoreUsers}
+          hasMore={hasMore}
+          remainingCount={remainingCount}
+          onLoadMore={onLoadMore}
         />
       )}
 
@@ -179,10 +109,10 @@ export default function UserPage() {
             Delete {pendingDelete.name ? `"${pendingDelete.name}"` : 'this user'}?
           </p>
           <div className="confirmToastActions">
-            <button type="button" className="secondaryButton" onClick={handleDeleteCanceled}>
+            <button type="button" className="secondaryButton" onClick={onDeleteCanceled}>
               Cancel
             </button>
-            <button type="button" className="deleteProduct" onClick={handleDeleteConfirmed}>
+            <button type="button" className="deleteProduct" onClick={onDeleteConfirmed}>
               Delete
             </button>
           </div>
