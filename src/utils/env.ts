@@ -10,17 +10,10 @@ export function getRequiredEnv(name: string): string {
 
 export function getApiBaseUrl(): string {
   const value = process.env.NEXT_PUBLIC_API_URL;
-  
-  // On client side, process.env might not have NEXT_PUBLIC_API_URL during module evaluation
-  // Return it if available, otherwise return empty string (fetchBaseQuery will handle it)
-  if (typeof window !== 'undefined' && (!value || String(value).trim().length === 0)) {
-    return '';
+  if (!value || String(value).trim().length === 0) {
+    throw new Error(
+      'NEXT_PUBLIC_API_URL is required. Copy env.example to .env.local and set NEXT_PUBLIC_API_URL.'
+    );
   }
-   
-  // On server side, always require it
-  if (typeof window === 'undefined') {
-    return getRequiredEnv('NEXT_PUBLIC_API_URL');
-  }
-  
-  return String(value);
+  return value;
 }

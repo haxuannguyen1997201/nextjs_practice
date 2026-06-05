@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useDispatch } from 'react-redux';
 import { logoutAction } from '@/src/app/actions/auth';
 import Toolbar from '@/src/component/Toolbar';
@@ -12,6 +11,7 @@ import ProductTable from '@/src/component/ProductTable';
 import FilterView from '@/src/component/FilterView';
 import { useAuthUser } from '@/src/hooks/useAuthUser';
 import { clearUser } from '@/src/store/authSlice';
+import { persistor } from '@/src/store/store';
 import type { AppDispatch } from '@/src/store/store';
 
 
@@ -30,7 +30,6 @@ function toShopProduct(apiProduct: ApiProduct): ShopProduct {
 const PAGE_SIZE = 20;
 
 export default function ProductPage() {
-  const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
   const { data: rawData = [], isLoading, isError } = useGetProductsQuery(undefined);
   const [deleteProduct, { error: deleteError }] = useDeleteProductMutation();
@@ -48,12 +47,9 @@ export default function ProductPage() {
   }, [toastNotice]);
 
   async function handleLogout() {
-    try {
-      await logoutAction();
-    } finally {
-      dispatch(clearUser());
-      router.push('/login');
-    }
+    dispatch(clearUser());
+    await persistor.flush();
+    await logoutAction();
   }
 
   const onConfirmDelete = useCallback(async (product: ShopProduct) => {

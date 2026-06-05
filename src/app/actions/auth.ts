@@ -2,6 +2,7 @@
 
 import { z } from 'zod';
 import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 import { createSessionToken } from '@/lib/session';
 import { getApiBaseUrl } from '@/src/utils/env';
 
@@ -123,28 +124,10 @@ export async function loginAction(prevState: LoginState, formData: FormData): Pr
   return { success: true, user: safeUser as Record<string, unknown> };
 }
 
-export async function logoutAction(): Promise<{ success: boolean }> {
+export async function logoutAction(): Promise<void> {
   const cookieStore = await cookies();
-  cookieStore.set('session', '', {
-    httpOnly: true,
-    sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
-    path: '/',
-    maxAge: 0,
-  });
-  cookieStore.set('auth_token', '', {
-    httpOnly: true,
-    sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
-    path: '/',
-    maxAge: 0,
-  });
-  cookieStore.set('auth_role', '', {
-    httpOnly: true,
-    sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
-    path: '/',
-    maxAge: 0,
-  });
-  return { success: true };
+  cookieStore.delete('session');
+  cookieStore.delete('auth_token');
+  cookieStore.delete('auth_role');
+  redirect('/login');
 }

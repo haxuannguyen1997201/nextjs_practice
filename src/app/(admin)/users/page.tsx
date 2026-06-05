@@ -11,6 +11,7 @@ import type { ToastNotice } from '@/src/models/ui';
 import type { StaffUserRow } from '@/src/models/user';
 import { useAuthUser } from '@/src/hooks/useAuthUser';
 import { clearUser } from '@/src/store/authSlice';
+import { persistor } from '@/src/store/store';
 import type { AppDispatch } from '@/src/store/store';
 
 const PAGE_SIZE = 20;
@@ -56,19 +57,19 @@ export default function UserPage() {
   }, [toastNotice]);
 
   useEffect(() => {
-    if (!currentUser) return;
+    if (currentUser === null) {
+      router.replace('/login');
+      return;
+    }
     if (String(currentUser.role ?? '').trim().toLowerCase() !== 'admin') {
       router.replace('/');
     }
   }, [currentUser, router]);
 
   async function handleLogout() {
-    try {
-      await logoutAction();
-    } finally {
-      dispatch(clearUser());
-      router.push('/login');
-    }
+    dispatch(clearUser());
+    await persistor.flush();
+    await logoutAction();
   }
 
   const onConfirmDelete = useCallback((user: StaffUserRow) => {
