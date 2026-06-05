@@ -1,56 +1,19 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useDispatch } from 'react-redux';
 import { logoutAction } from '@/src/app/actions/auth';
 import Toolbar from '@/src/component/Toolbar';
-import type { AuthUser } from '@/src/models/auth';
 import type { ApiProduct, ShopProduct } from '@/src/models/product';
 import type { ToastNotice } from '@/src/models/ui';
 import { useDeleteProductMutation, useGetProductsQuery } from '@/src/store/productsApi';
 import ProductTable from '@/src/component/ProductTable';
 import FilterView from '@/src/component/FilterView';
+import { useAuthUser } from '@/src/hooks/useAuthUser';
+import { clearUser } from '@/src/store/authSlice';
+import type { AppDispatch } from '@/src/store/store';
 
-const PAGE_SIZE = 20;
-
-function subscribeAuthUser(callback: () => void): () => void {
-  window.addEventListener('storage', callback);
-  return () => window.removeEventListener('storage', callback);
-}
-
-let cachedAuthUserRaw: string | null | undefined;
-let cachedAuthUser: AuthUser | null = null;
-
-function getClientAuthUser(): AuthUser | null {
-  const rawValue = localStorage.getItem('auth_user');
-  if (rawValue === cachedAuthUserRaw) {
-    return cachedAuthUser;
-  }
-
-  cachedAuthUserRaw = rawValue;
-  try {
-    cachedAuthUser = rawValue ? (JSON.parse(rawValue) as AuthUser) : null;
-  } catch {
-    cachedAuthUser = null;
-  }
-
-  return cachedAuthUser;
-}
-
-function getServerAuthUser(): AuthUser | null {
-  return null;
-}
-
-function formatAuthUserLabel(user: AuthUser | null): string | null {
-  if (!user) return null;
-
-  const name = String(user.name ?? user.username ?? '').trim();
-  if (!name) return null;
-
-  const role = String(user.role ?? '').trim();
-
-  return role ? `${name} (${role})` : name;
-}
 
 function toShopProduct(apiProduct: ApiProduct): ShopProduct {
   return {
@@ -64,15 +27,17 @@ function toShopProduct(apiProduct: ApiProduct): ShopProduct {
   };
 }
 
+const PAGE_SIZE = 20;
+
 export default function ProductPage() {
   const router = useRouter();
+  const dispatch = useDispatch<AppDispatch>();
   const { data: rawData = [], isLoading, isError } = useGetProductsQuery(undefined);
   const [deleteProduct, { error: deleteError }] = useDeleteProductMutation();
   const [deletingIds, setDeletingIds] = useState<Set<string>>(() => new Set());
   const [pendingDelete, setPendingDelete] = useState<ShopProduct | null>(null);
   const [toastNotice, setToastNotice] = useState<ToastNotice | null>(null);
-  const currentUser = useSyncExternalStore(subscribeAuthUser, getClientAuthUser, getServerAuthUser);
-  const userLabel = useMemo(() => formatAuthUserLabel(currentUser), [currentUser]);
+  const { user: currentUser, label: userLabel } = useAuthUser();
 
   useEffect(() => {
     if (!toastNotice) return;
@@ -86,7 +51,7 @@ export default function ProductPage() {
     try {
       await logoutAction();
     } finally {
-      localStorage.removeItem('auth_user');
+      dispatch(clearUser());
       router.push('/login');
     }
   }

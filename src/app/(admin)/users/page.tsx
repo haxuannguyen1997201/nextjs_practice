@@ -1,55 +1,23 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useDispatch } from 'react-redux';
 import { logoutAction } from '@/src/app/actions/auth';
 import { useDeleteUserMutation, useGetStaffUsersQuery } from '@/src/store/productsApi';
 import UserTable from '@/src/component/UserTable';
-import type { AuthUser } from '@/src/models/auth';
 import type { ToastNotice } from '@/src/models/ui';
 import type { StaffUserRow } from '@/src/models/user';
+import { useAuthUser } from '@/src/hooks/useAuthUser';
+import { clearUser } from '@/src/store/authSlice';
+import type { AppDispatch } from '@/src/store/store';
 
 const PAGE_SIZE = 20;
 
-function subscribeAuthUser(callback: () => void): () => void {
-  window.addEventListener('storage', callback);
-  return () => window.removeEventListener('storage', callback);
-}
-
-let cachedAuthUserRaw: string | null | undefined;
-let cachedAuthUser: AuthUser | null = null;
-
-function getClientAuthUser(): AuthUser | null {
-  const rawValue = localStorage.getItem('auth_user');
-  if (rawValue === cachedAuthUserRaw) {
-    return cachedAuthUser;
-  }
-
-  cachedAuthUserRaw = rawValue;
-  try {
-    cachedAuthUser = rawValue ? (JSON.parse(rawValue) as AuthUser) : null;
-  } catch {
-    cachedAuthUser = null;
-  }
-
-  return cachedAuthUser;
-}
-
-function getServerAuthUser(): AuthUser | null {
-  return null;
-}
-
-function formatAuthUserLabel(user: AuthUser | null): string | null {
-  if (!user) return null;
-  const name = String(user.name ?? user.username ?? '').trim();
-  if (!name) return null;
-  const role = String(user.role ?? '').trim();
-  return role ? `${name} (${role})` : name;
-}
-
 export default function UserPage() {
   const router = useRouter();
+  const dispatch = useDispatch<AppDispatch>();
   const { data: rawData = [], isLoading, isError } = useGetStaffUsersQuery(undefined);
   const [deleteUser, { error: deleteError }] = useDeleteUserMutation();
   const [search, setSearch] = useState('');
@@ -57,8 +25,7 @@ export default function UserPage() {
   const [deletingIds, setDeletingIds] = useState<Set<string>>(() => new Set());
   const [pendingDelete, setPendingDelete] = useState<StaffUserRow | null>(null);
   const [toastNotice, setToastNotice] = useState<ToastNotice | null>(null);
-  const currentUser = useSyncExternalStore(subscribeAuthUser, getClientAuthUser, getServerAuthUser);
-  const userLabel = useMemo(() => formatAuthUserLabel(currentUser), [currentUser]);
+  const { user: currentUser, label: userLabel } = useAuthUser();
 
   const users = useMemo(() => rawData as StaffUserRow[], [rawData]);
 
@@ -99,7 +66,7 @@ export default function UserPage() {
     try {
       await logoutAction();
     } finally {
-      localStorage.removeItem('auth_user');
+      dispatch(clearUser());
       router.push('/login');
     }
   }
