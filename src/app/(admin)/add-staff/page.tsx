@@ -1,105 +1,20 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { Resolver, useForm, useWatch } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { useRouter } from 'next/navigation';
-import { useCreateUserMutation, useLazyGetStaffUserByUsernameQuery } from '@/src/store/productsApi';
 import FormField from '@/src/component/FormField';
 import FormActions from '@/src/component/FormActions';
-
-interface UserFormValues {
-  avatar: string;
-  name: string;
-  username: string;
-  password: string;
-}
-
-const userFormSchema = z.object({
-  avatar: z.string().trim().url('Avatar must be a valid URL'),
-  name: z.string().trim().min(1, 'Name is required'),
-  username: z.string().trim().min(1, 'Username is required'),
-  password: z.string().trim().min(6, 'Password must be at least 6 characters'),
-});
+import useAddStaff from '@/src/hooks/useAddStaff';
 
 export default function AddStaffPage() {
-  const router = useRouter();
-  const [createUser] = useCreateUserMutation();
-  const [checkUsername] = useLazyGetStaffUserByUsernameQuery();
-  const [submitError, setSubmitError] = useState<string | null>(null);
-
-  const defaultValues = useMemo(
-    () => ({
-      avatar: '',
-      name: '',
-      username: '',
-      password: '',
-    }) as UserFormValues,
-    []
-  );
-
   const {
     register,
     handleSubmit,
-    setError,
-    control,
-    formState: { errors, isSubmitting },
-  } = useForm<UserFormValues>({
-    resolver: zodResolver(userFormSchema) as Resolver<UserFormValues>,
-    defaultValues,
-    mode: 'onSubmit',
-  });
-
-  async function onSubmit(values: UserFormValues) {
-    setSubmitError(null);
-    try {
-      let existingUsers = [] as unknown[];
-      try {
-        existingUsers = await checkUsername(values.username).unwrap();
-      } catch (usernameError) {
-        if (
-          typeof usernameError === 'object' &&
-          usernameError !== null &&
-          'status' in usernameError &&
-          (usernameError as { status: number }).status === 404
-        ) {
-          existingUsers = [];
-        } else {
-          throw usernameError;
-        }
-      }
-
-      if (existingUsers.length > 0) {
-        setError('username', {
-          type: 'manual',
-          message: 'Username already exists. Choose a different one.',
-        });
-        return;
-      }
-
-      await createUser({
-        payload: {
-          avatar: values.avatar,
-          name: values.name,
-          username: values.username,
-          password: values.password,
-          role: 'staff',
-          createdAt: new Date().toISOString(),
-        },
-      }).unwrap();
-
-      router.push('/users');
-    } catch (err) {
-      setSubmitError('Failed to create staff user. Please try again.');
-    }
-  }
-
-  function goBack() {
-    router.back();
-  }
-
-  const avatarPreview = useWatch({ control, name: 'avatar' });
+    errors,
+    isSubmitting,
+    submitError,
+    onSubmit,
+    goBack,
+    avatarPreview,
+  } = useAddStaff();
 
   return (
     <div className="shopPage">
